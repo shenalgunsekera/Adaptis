@@ -1,0 +1,214 @@
+/* ============================================================================
+   Adaptis — design tokens
+   Canonical set: Adaptis Rise v2, version 2.0, synced 31 August 2026.
+
+   Dark-ground resolution ratified for this build, per handoff section 3:
+     - Ink #33332C is the site ground.
+     - Halite #09324A is the footer, and nothing else, with at least one full
+       light section between any Ink mass and it (the two darks never touch).
+     - Secondary text on Ink is Hairline #D8D6D4 (8.77:1). Secondary on Halite
+       stays Cassiopeia #AED0C9 (8.08:1).
+     - Naples remains one connected form per page. On a dark ground that form
+       is the primary call to action.
+
+   Values marked [ext] are derived extensions required by a dark ground and
+   are not in the canonical token file. They are grouped so the brand owner
+   can review them as a set. Nothing else departs from Rise v2.
+   ========================================================================= */
+
+:root {
+  /* --- Brand, canonical ------------------------------------------------- */
+  --brand-ink: #33332C;
+  --brand-naples: #FAD758;
+  --brand-naples-light: #FCE9A6;
+  --brand-apricot: #F1B393;
+  --brand-halite: #09324A;
+  --brand-billabong: #1B6F81;
+  --brand-cassiopeia: #AED0C9;
+
+  /* --- Neutral ramp, canonical (recalibrated 29 Aug 2026) ---------------- */
+  --neutral-card: #FFFDF9;
+  --neutral-page: #FCFBFA;
+  --neutral-ivory: #F5F3F1;
+  --neutral-tint: #EDEBE9;
+  --neutral-hairline: #D8D6D4;
+  --neutral-quiet: #B1AEAC;   /* fills and gridlines only — never text */
+  --neutral-secondary: #6B6967;
+
+  /* --- Surfaces on a dark ground ----------------------------------------
+     There is no second dark here on purpose. The system is explicit:
+     "separate by #D8D6D4 hairline, not by tone; cards are distinguished by
+     hairline, not fill or shadow." So Ink is the only dark solid on the
+     site, and every panel, card and band is told apart by its hairline.
+
+     Where a surface genuinely has to sit over a photograph, it is Ink at
+     alpha rather than a new colour — the same technique the token file uses
+     for --rail-active-fill, rgba(174,208,201,.2). */
+  --ink-a90: rgba(51, 51, 44, 0.90);   /* Ink over imagery */
+  --ink-a80: rgba(51, 51, 44, 0.80);
+  --ink-a74: rgba(51, 51, 44, 0.74);
+
+  /* Body text on a warm filled tile. The system says warm pages put "Ink
+     text and Ink headings" on Tint and Naples light tiles, and the verified
+     pair is Ink on Naples light at 10.51:1. So it is canonical Ink, not a
+     derived grey; hierarchy comes from size and weight instead. */
+  --text-secondary-on-fill: var(--brand-ink);
+
+  /* --- Lines -------------------------------------------------------------
+     On light grounds the hairline is canonical #D8D6D4. On dark it is that
+     same value at low alpha, so a divider stays Hairline rather than
+     becoming a new colour. */
+  --line-on-light: #D8D6D4;
+  --line-on-ink: rgba(216, 214, 212, 0.16);        /* [ext] */
+  --line-on-ink-strong: rgba(216, 214, 212, 0.32); /* [ext] */
+  --line-on-halite: rgba(174, 208, 201, 0.22);     /* [ext] */
+
+  /* --- Text, every pair verified against WCAG 2.1 AA --------------------- */
+  --text-on-light: #33332C;              /* Ink on Card          12.52:1 */
+  --text-secondary-on-light: #6B6967;    /* Secondary on Card     5.38:1 */
+  --text-link-on-light: #1B6F81;         /* Billabong on Card     5.68:1 */
+
+  --text-on-ink: #FFFDF9;                /* Card on Ink          12.52:1 */
+  --text-secondary-on-ink: #D8D6D4;      /* Hairline on Ink       8.77:1 */
+
+  --text-on-halite: #FFFDF9;             /* Card on Halite       13.19:1 */
+  --text-secondary-on-halite: #AED0C9;   /* Cassiopeia on Halite  8.08:1 */
+
+  /* --- Surfaces ----------------------------------------------------------- */
+  --surface-ink: var(--brand-ink);
+  --surface-card: var(--neutral-card);
+  --surface-page: var(--neutral-page);
+  --surface-tint: var(--neutral-tint);
+  --surface-halite: var(--brand-halite);
+
+  /* --- Call to action -----------------------------------------------------
+     Naples fill with Ink text, 9.04:1, on every ground except Halite, where
+     Naples is barred on ownership. Hover inverts per the 31 Aug decision; on
+     a dark ground inverting to Ink would vanish, so the dark-ground
+     inversion goes to Card with Ink text. */
+  --cta-bg: var(--brand-naples);
+  --cta-text: var(--brand-ink);
+  --cta-hover-bg-on-light: var(--brand-ink);
+  --cta-hover-text-on-light: #FFFFFF;
+  --cta-hover-bg-on-ink: var(--neutral-card);   /* [ext] */
+  --cta-hover-text-on-ink: var(--brand-ink);    /* [ext] */
+  --cta-halite-bg: var(--brand-cassiopeia);
+  --cta-halite-text: var(--brand-halite);
+
+  /* --- Service-line identities --------------------------------------------
+     Handoff section 2: each area of work recognisable on sight. Drawn only
+     from tokens already in the brand set; Apricot is explicitly released for
+     this use in section 8, having been unused anywhere in the build. These
+     are accent hues for keylines, numerals and module colourways — never
+     text, never a fill behind body copy. */
+  --area-building-record: #FAD758;
+  --area-assessments: #AED0C9;
+  --area-capital: #F1B393;
+  --area-managed-services: #FCE9A6;
+  --area-reporting: #1B6F81;
+
+  /* --- Type ----------------------------------------------------------------
+     Four faces is the ceiling. Elms Sans is the marketing hero face and falls
+     back to Source Serif 4, which is what the reference build shipped. */
+  --font-display: "Elms Sans", "Source Serif 4", Georgia, serif;
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --type-hero-home: clamp(32px, 5.4vw, 56px);
+  --type-hero-inner: clamp(28px, 4.6vw, 46px);
+  --type-h2: clamp(24px, 3.4vw, 34px);
+  --type-h3: 21px;
+  --type-band: clamp(21px, 3vw, 32px);
+  --type-body: 17px;
+  --type-body-sm: 15.5px;
+  --type-eyebrow: 12px;
+  --type-tag: 12.5px;
+  --type-quote: 19px;
+
+  /* --- Layout --------------------------------------------------------------- */
+  --wrap: 1200px;
+  --gut: clamp(20px, 5vw, 64px);
+  --measure: 68ch;
+  --sec-y: clamp(56px, 8vw, 104px);
+
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  --radius-control: 8px;
+  --radius-card: 10px;
+  --radius-inset: 12px;
+
+  --header-h: 68px;
+  /* The header bar floats on the page rather than sitting in a drawn frame;
+     the old full-viewport Ink border cropped the hero photograph. Kept as a
+     token so the bar's top offset stays adjustable in one place. */
+  --frame: 0px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 160ms;
+}
+
+/* ---------------------------------------------------------------------------
+   Surface contexts.
+
+   A section declares its ground once and every descendant reads its text,
+   line and call-to-action colours from that declaration. This is what stops
+   the two darks touching by accident: an .on-halite block cannot inherit Ink
+   values, and an .on-ink block cannot inherit Halite values.
+   ------------------------------------------------------------------------- */
+.on-ink {
+  --ground: var(--surface-ink);
+  --raised: transparent;
+  --recessed: var(--brand-ink);
+  --hover: rgba(216, 214, 212, 0.06);
+  --text: var(--text-on-ink);
+  --text-secondary: var(--text-secondary-on-ink);
+  --line: var(--line-on-ink);
+  --line-strong: var(--line-on-ink-strong);
+  --cta-hover-bg: var(--cta-hover-bg-on-ink);
+  --cta-hover-text: var(--cta-hover-text-on-ink);
+  /* A filled tile is a surface change, so it steps with the ground rather
+     than being a fixed colour. On Ink that step is upward into the dark
+     ramp; on a light ground it is Tint. */
+  --tile: transparent;
+  --tile-hover: rgba(216, 214, 212, 0.06);
+  background: var(--ground);
+  color: var(--text);
+}
+
+.on-card,
+.on-page {
+  --raised: var(--neutral-card);
+  --recessed: var(--neutral-tint);
+  --hover: var(--neutral-tint);
+  --text: var(--text-on-light);
+  --text-secondary: var(--text-secondary-on-light);
+  --line: var(--line-on-light);
+  --line-strong: var(--line-on-light);
+  --cta-hover-bg: var(--cta-hover-bg-on-light);
+  --cta-hover-text: var(--cta-hover-text-on-light);
+  --tile: var(--neutral-tint);
+  --tile-hover: var(--neutral-ivory);
+  background: var(--ground);
+  color: var(--text);
+}
+.on-card { --ground: var(--surface-card); }
+.on-page { --ground: var(--surface-page); }
+
+.on-halite {
+  --ground: var(--surface-halite);
+  --raised: var(--surface-halite);
+  --recessed: var(--surface-halite);
+  --hover: var(--surface-halite);
+  --text: var(--text-on-halite);
+  --text-secondary: var(--text-secondary-on-halite);
+  --line: var(--line-on-halite);
+  --line-strong: var(--line-on-halite);
+  --cta-hover-bg: var(--cta-halite-bg);
+  --cta-hover-text: var(--cta-halite-text);
+  --tile: rgba(174, 208, 201, 0.10);
+  --tile-hover: rgba(174, 208, 201, 0.16);
+  background: var(--ground);
+  color: var(--text);
+}

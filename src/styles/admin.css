@@ -1,0 +1,311 @@
+/* ============================================================================
+   Adaptis admin — product UI
+
+   This is a product surface, not a marketing one, so it follows the product
+   rules rather than the website's:
+
+     - Ground is pure white #FFFFFF. The warm ramp is a marketing device: Page
+       appears only as hover and active fills, Tint only for small insets.
+     - Everything is square. Radius 0 on every control, input, chip, panel and
+       table. The 8/10px radii are marketing-only.
+     - Chrome is colorless: white, Ink, Secondary, Hairline. Colour encodes
+       data, or one significant action per screen.
+     - Dense hairline tables sit directly on the page with no card wrappers.
+       Whitespace over boxes.
+     - Section headings are Geist semibold Ink, not Source Serif.
+     - The navigation rail is dark on #06283B, a registered exception to the
+       colorless-chrome rule. Rail only, never a general surface.
+   ========================================================================= */
+
+.adm {
+  --rail-w: 248px;
+  --ground: #FFFFFF;
+  --ink: #33332C;
+  --secondary: #6B6967;
+  --hairline: #D8D6D4;
+  --tint: #EDEBE9;
+  --quiet: #B1AEAC;
+  --page: #FCFBFA;
+  --link: #1B6F81;
+  --rail: #06283B;
+  --rail-text: #FFFDF9;
+  --rail-secondary: #AED0C9;
+  --naples: #FAD758;
+  /* The proposed control outline #7B7975 is explicitly not canonical, so the
+     control edge is Secondary, which clears 3:1 on white at 5.3:1. */
+  --ctl-line: #6B6967;
+
+  /* The status ramp is proposed, not ratified, so nothing here bakes it.
+     Severity reads from the marker's text label and from the hatch on
+     adverse data; Billabong marks verified, Quiet marks unverified, exactly
+     as the product rules state. */
+  --pass: #1B6F81;
+  --fail: #33332C;
+  --caution: #6B6967;
+
+  min-height: 100vh;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.adm *, .adm *::before, .adm *::after { box-sizing: border-box; }
+.adm h1, .adm h2, .adm h3, .adm h4 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.adm h1 { font-size: 22px; line-height: 1.25; }
+.adm h2 { font-size: 16px; line-height: 1.3; }
+.adm h3 { font-size: 14px; line-height: 1.35; }
+.adm p { margin: 0; }
+.adm a { color: var(--link); text-decoration: none; }
+.adm a:hover { text-decoration: underline; }
+.adm :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; border-radius: 0; }
+
+/* --- Frame ----------------------------------------------------------------- */
+
+.adm__frame { display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); min-height: 100vh; }
+
+.adm__rail {
+  background: var(--rail);
+  color: var(--rail-text);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+.adm__railbrand { padding: 0 24px 24px; }
+.adm__railnav { display: flex; flex-direction: column; }
+.adm__railitem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px 12px 16px;
+  border-left: 4px solid transparent;
+  color: var(--rail-secondary);
+  font-size: 14px;
+  transition: background 120ms ease, color 120ms ease;
+}
+.adm__railitem:hover { color: var(--rail-text); text-decoration: none; background: rgba(174, 208, 201, 0.08); }
+.adm__railitem[data-active="true"] {
+  color: var(--rail-text);
+  border-left-color: var(--rail-secondary);
+  background: rgba(174, 208, 201, 0.20);
+  font-weight: 500;
+}
+.adm__railfoot { margin-top: auto; padding: 24px; border-top: 1px solid rgba(174, 208, 201, 0.22); }
+.adm__railuser { font-size: 12.5px; color: var(--rail-secondary); word-break: break-all; }
+
+.adm__main { min-width: 0; display: flex; flex-direction: column; }
+.adm__head {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--ground);
+  border-bottom: 1px solid var(--hairline);
+  padding: 24px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.adm__body { padding: 32px; flex: 1; }
+.adm__sub { color: var(--secondary); font-size: 13px; margin-top: 4px; }
+
+@media (max-width: 900px) {
+  .adm__frame { grid-template-columns: 1fr; }
+  .adm__rail { position: static; height: auto; }
+  .adm__railnav { flex-direction: row; overflow-x: auto; }
+  .adm__railitem { border-left: 0; border-bottom: 4px solid transparent; white-space: nowrap; }
+  .adm__railitem[data-active="true"] { border-left-color: transparent; border-bottom-color: var(--rail-secondary); }
+}
+
+/* --- Controls -------------------------------------------------------------- */
+
+.adm__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid var(--ctl-line);
+  border-radius: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.adm__btn:hover { background: var(--page); }
+.adm__btn:disabled {
+  background: var(--tint);
+  border-color: var(--tint);
+  color: var(--quiet, #B1AEAC);
+  cursor: not-allowed;
+}
+
+/* Naples is reserved for the one primary action on a screen. */
+.adm__btn--primary { background: var(--naples); border-color: var(--naples); color: var(--ink); }
+.adm__btn--primary:hover { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+
+.adm__btn--quiet { border-color: transparent; color: var(--secondary); padding-inline: 12px; }
+.adm__btn--quiet:hover { background: var(--page); color: var(--ink); }
+
+.adm__btn--danger { color: var(--fail); border-color: var(--hairline); }
+.adm__btn--danger:hover { background: var(--page); border-color: var(--fail); }
+
+.adm__btn--sm { padding: 4px 12px; font-size: 12.5px; }
+
+.adm__field { display: grid; gap: 8px; margin-bottom: 16px; }
+.adm__label { font-size: 12.5px; font-weight: 500; color: var(--secondary); }
+.adm__input, .adm__textarea, .adm__select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--ctl-line);
+  border-radius: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.adm__textarea { min-height: 96px; resize: vertical; }
+.adm__input:focus, .adm__textarea:focus, .adm__select:focus { border-color: var(--ink); outline: 2px solid var(--link); outline-offset: 1px; }
+.adm__hint { font-size: 12px; color: var(--secondary); }
+.adm__count { font-size: 11.5px; color: var(--secondary); font-variant-numeric: tabular-nums; }
+
+/* --- Tables: hairline rows directly on the page, no card wrapper ----------- */
+
+.adm__table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.adm__table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--secondary);
+  padding: 8px 16px 8px 0;
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+}
+.adm__table td { padding: 12px 16px 12px 0; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+.adm__table tbody tr:hover { background: var(--page); }
+.adm__table .num { font-variant-numeric: tabular-nums; text-align: right; }
+
+/* Selection is a structural claim: Page fill, 3px Ink edge, name at 600. */
+.adm__table tr[data-selected="true"] { background: var(--page); box-shadow: inset 3px 0 0 var(--ink); }
+.adm__table tr[data-selected="true"] td:first-child { font-weight: 600; }
+
+/* --- Data markers: square dot plus a text label; hue never alone ----------- */
+
+.adm__marker { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; white-space: nowrap; }
+.adm__marker::before { content: ""; width: 8px; height: 8px; flex: 0 0 auto; background: var(--secondary); }
+.adm__marker--error::before { background: var(--fail); }
+.adm__marker--warning::before { background: var(--caution); }
+.adm__marker--note::before { background: var(--link); }
+.adm__marker--ok::before { background: var(--pass); }
+.adm__marker--draft::before { background: var(--caution); }
+
+/* Adverse data is hatched as well as coloured, so it survives greyscale. */
+.adm__hatch {
+  background-image: repeating-linear-gradient(135deg, rgba(166,51,31,0.18) 0 2px, transparent 2px 5px);
+}
+
+/* --- Findings -------------------------------------------------------------- */
+
+.adm__findings { display: grid; gap: 0; border-top: 1px solid var(--hairline); }
+.adm__finding { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--hairline); }
+.adm__finding__rule { font-size: 12.5px; color: var(--secondary); }
+.adm__finding__msg { font-size: 13.5px; }
+
+@media (max-width: 620px) { .adm__finding { grid-template-columns: 1fr; gap: 4px; } }
+
+/* --- Section editor -------------------------------------------------------- */
+
+.adm__section {
+  border: 1px solid var(--hairline);
+  border-radius: 0;
+  margin-bottom: 16px;
+  background: var(--ground);
+}
+.adm__section__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid transparent;
+  flex-wrap: wrap;
+}
+.adm__section[data-open="true"] .adm__section__head { border-bottom-color: var(--hairline); background: var(--page); }
+.adm__section__title { font-weight: 600; font-size: 14px; }
+.adm__section__type { font-family: var(--font-mono); font-size: 11.5px; color: var(--secondary); }
+.adm__section__body { padding: 16px; }
+.adm__section__tools { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+
+.adm__ground {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--secondary);
+}
+.adm__swatch { width: 12px; height: 12px; border: 1px solid var(--hairline); flex: 0 0 auto; }
+
+.adm__repeat { border-left: 3px solid var(--hairline); padding-left: 14px; margin-bottom: 18px; }
+.adm__repeat__head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.adm__repeat__n { font-family: var(--font-mono); font-size: 11.5px; color: var(--secondary); }
+
+.adm__grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+@media (max-width: 720px) { .adm__grid2 { grid-template-columns: 1fr; } }
+
+/* --- Stat rows: hairline-separated figures, not coloured tiles ------------- */
+
+.adm__stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); border-top: 1px solid var(--hairline); }
+.adm__stat { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--hairline); }
+.adm__stat__v { font-size: 26px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.adm__stat__l { font-size: 12.5px; color: var(--secondary); margin-top: 2px; }
+
+/* --- Sign in ---------------------------------------------------------------- */
+
+.adm__signin { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: var(--ground); }
+.adm__signin__box { width: 100%; max-width: 380px; }
+.adm__signin__brand { margin-bottom: 32px; }
+
+/* --- Notices ---------------------------------------------------------------- */
+
+.adm__notice { padding: 12px 16px; border: 1px solid var(--hairline); font-size: 13.5px; margin-bottom: 16px; }
+.adm__notice--error { border-color: var(--fail); }
+.adm__notice--ok { border-color: var(--pass); }
+.adm__notice--warn { border-color: var(--caution); }
+
+.adm__empty { padding: 40px 0; color: var(--secondary); font-size: 13.5px; }
+
+.adm__bar {
+  position: sticky;
+  bottom: 0;
+  background: var(--ground);
+  border-top: 1px solid var(--hairline);
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 -32px -32px;
+}
+
+.adm__avatar {
+  width: 32px; height: 32px; border-radius: 0;
+  background: var(--tint); color: var(--ink);
+  display: grid; place-items: center;
+  font-size: 12px; font-weight: 600;
+  flex: 0 0 auto;
+}

@@ -1,0 +1,41 @@
+rules_version = '2';
+
+/* ============================================================================
+   Firestore security rules.
+
+   The public site reads content through the Admin SDK on the server, which
+   bypasses these rules entirely. The browser therefore needs no read access
+   to content at all, and is given none.
+
+   Writes happen only through the admin API routes, which verify a Firebase ID
+   token against an allowlist held in an environment variable. That allowlist
+   is deliberately not in the database: an attacker who could write to
+   Firestore must not be able to grant themselves editing rights.
+
+   So the rule here is the strict one — the browser gets nothing.
+   ========================================================================= */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Site content. Server-rendered through the Admin SDK; no client access.
+    match /pages/{page} {
+      allow read, write: if false;
+    }
+
+    match /settings/{doc} {
+      allow read, write: if false;
+    }
+
+    // Enquiries. Written by the contact API with the Admin SDK, read in the
+    // admin panel through an authenticated API route. Never from a browser:
+    // a client-writable collection here would be an open spam relay.
+    match /contactSubmissions/{submission} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

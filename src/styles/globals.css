@@ -1,0 +1,1499 @@
+@import "./tokens.css";
+
+/* ============================================================================
+   Adaptis — global stylesheet
+
+   Structure is carried by the hairline and by surface changes. There are no
+   shadows, no gradients, no depth effects and no rotation anywhere in this
+   file. Sentence case throughout; nothing is transformed to upper case.
+   ========================================================================= */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+/* A reveal that has not fired yet sits translated, which would otherwise
+   extend the scrollable width and create a horizontal scrollbar. "clip"
+   rather than "hidden" so sticky positioning still works inside. */
+main { overflow-x: clip; }
+
+body {
+  margin: 0;
+  background: var(--surface-ink);
+  color: var(--text-on-ink);
+  font-family: var(--font-ui);
+  font-size: var(--type-body);
+  line-height: 1.7;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+img, svg, video { max-width: 100%; display: block; }
+img { height: auto; }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+a { color: inherit; text-decoration: none; }
+
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+input, textarea, select { font: inherit; color: inherit; }
+
+/* --- Focus ---------------------------------------------------------------
+   Visible on every interactive element, on every ground. */
+:focus-visible {
+  outline: 2px solid var(--brand-naples);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.on-card :focus-visible,
+.on-page :focus-visible { outline-color: var(--brand-billabong); }
+.on-halite :focus-visible { outline-color: var(--brand-cassiopeia); }
+
+/* --- Skip link ------------------------------------------------------------
+   Clipped to nothing until it takes keyboard focus, so it never occupies
+   space, never appears on a pointer device, and never flashes before the
+   stylesheet lands. It exists only for the keyboard tab order, which the
+   handoff requires. */
+.skip {
+  position: fixed;
+  left: var(--space-4);
+  top: var(--space-4);
+  z-index: 300;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  background: var(--brand-naples);
+  color: var(--brand-ink);
+  font-weight: 500;
+  border-radius: var(--radius-control);
+}
+.skip:focus-visible {
+  width: auto;
+  height: auto;
+  padding: 12px 16px;
+  overflow: visible;
+  clip-path: none;
+}
+
+/* --- Layout primitives ---------------------------------------------------- */
+.wrap {
+  width: 100%;
+  max-width: var(--wrap);
+  margin-inline: auto;
+  padding-inline: var(--gut);
+}
+
+.section { padding-block: var(--sec-y); }
+.section--tight { padding-block: calc(var(--sec-y) * 0.62); }
+
+.measure { max-width: var(--measure); }
+
+.rule { height: 1px; background: var(--line); border: 0; margin: 0; }
+
+/* ============================================================================
+   Type
+   ========================================================================= */
+
+.eyebrow {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+/* The square dot marker: the brand's own data-marker grammar, used here as
+   the eyebrow's mark. Square, never a bullet glyph. */
+.eyebrow::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  background: var(--accent, var(--brand-naples));
+}
+
+/* Elms Sans sets wide word spaces. The negative tracking closes the letters
+   but not the spaces, so the two are balanced explicitly; the rule is inert
+   when the face falls back to Source Serif 4. */
+.h1-home {
+  font-family: var(--font-display);
+  font-size: var(--type-hero-home);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+  word-spacing: -0.08em;
+}
+
+.h1-page {
+  font-family: var(--font-display);
+  font-size: var(--type-hero-inner);
+  line-height: 1.10;
+  letter-spacing: -0.018em;
+  word-spacing: -0.08em;
+}
+
+.h2 {
+  font-size: var(--type-h2);
+  line-height: 1.16;
+  letter-spacing: -0.01em;
+  max-width: 24ch;
+}
+.h2--wide { max-width: 34ch; }
+
+.h3 { font-size: var(--type-h3); line-height: 1.30; }
+
+.lede {
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 58ch;
+}
+
+.body { font-size: var(--type-body); line-height: 1.7; max-width: var(--measure); }
+.body + .body { margin-top: var(--space-5); }
+.body--sm { font-size: var(--type-body-sm); line-height: 1.6; }
+
+.secondary { color: var(--text-secondary); }
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: var(--type-tag);
+  line-height: 1.4;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.numeric { font-variant-numeric: tabular-nums; }
+
+/* Two-tone display line: lead sentence at full strength, continuation at
+   secondary. The Scion founder-note and section-opener move. */
+.duotone { color: var(--text); }
+.duotone em { font-style: normal; color: var(--text-secondary); }
+
+/* ============================================================================
+   Controls
+   ========================================================================= */
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  background: var(--neutral-tint);
+  color: var(--neutral-quiet);
+  border-color: var(--neutral-tint);
+  cursor: not-allowed;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 15px 22px;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+  cursor: pointer;
+}
+
+/* The single Naples form on the page. One per page, never scattered. */
+.btn--primary {
+  background: var(--cta-bg);
+  color: var(--cta-text);
+}
+.btn--primary:hover {
+  background: var(--cta-hover-bg);
+  color: var(--cta-hover-text);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+.btn--ghost:hover { background: var(--raised); border-color: var(--text-secondary); }
+
+/* Ink control for a light ground where the page's yellow is spent elsewhere. */
+.btn--ink { background: var(--brand-ink); color: var(--neutral-card); }
+.btn--ink:hover { background: var(--neutral-card); color: var(--brand-ink); }
+
+/* Card control for a dark ground where the page's yellow is spent elsewhere. */
+.btn--oncard {
+  background: var(--neutral-card);
+  color: var(--brand-ink);
+  border-color: var(--neutral-hairline);
+}
+.btn--oncard:hover { background: var(--neutral-tint); }
+
+.btn--halite { background: var(--cta-halite-bg); color: var(--cta-halite-text); }
+.btn--halite:hover { background: var(--neutral-card); color: var(--brand-halite); }
+
+/* Arrow link: the Scion "↳ Explore our services" move, drawn with a corner
+   glyph rather than an icon font. */
+.arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text);
+  transition: gap var(--dur) var(--ease);
+}
+.arrow-link::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+}
+.arrow-link:hover { gap: 12px; }
+
+.link-inline {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-strong);
+  transition: text-decoration-color var(--dur) var(--ease);
+}
+.link-inline:hover { text-decoration-color: currentColor; }
+.on-card .link-inline, .on-page .link-inline { color: var(--text-link-on-light); }
+
+/* Round icon button — carousel controls. */
+.icon-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  background: transparent;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.icon-btn:hover { background: rgba(255, 253, 249, 0.12); border-color: var(--text); }
+.icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ============================================================================
+   Header — the Scion frame and top bar
+   A dark bar inset from the page edge, sitting on the frame, with the page
+   content bleeding past it on both sides.
+   ========================================================================= */
+
+/* The Scion top bar: a solid dark bar inset from the page edges, pinned to
+   the top, with the hero image running past it on both sides. It is chrome,
+   so it stays solid rather than fading in and out of the photograph. */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.header__bar {
+  pointer-events: auto;
+  color: var(--text-on-ink);
+  will-change: margin, border-radius, background-color;
+}
+.header--scrolled .header__bar {
+  backdrop-filter: blur(14px) saturate(120%);
+  -webkit-backdrop-filter: blur(14px) saturate(120%);
+}
+.header__inner {
+  max-width: var(--wrap);
+  margin-inline: auto;
+  min-height: var(--header-h);
+  padding-inline: var(--gut);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+/* The bar keeps its inset shape all the way down the page — that shape is
+   the point. Scrolling only adds the hairline that separates it from
+   whatever is passing underneath. */
+
+
+.header__logo { display: inline-flex; align-items: center; padding-block: 8px; }
+.header__logo svg { height: 26px; width: auto; }
+
+.header__nav { display: flex; align-items: center; gap: clamp(16px, 2.4vw, 32px); }
+
+.navlink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text-secondary-on-ink);
+  padding-block: 8px;
+  transition: color var(--dur) var(--ease);
+}
+.navlink:hover, .navlink[data-active="true"] { color: var(--text-on-ink); }
+.navlink[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: var(--brand-naples);
+}
+
+.header__right { display: flex; align-items: center; gap: var(--space-4); }
+
+.header__cta {
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 12px 16px;
+  border-radius: var(--radius-control);
+  background: var(--neutral-card);
+  color: var(--brand-ink);
+  border: 1px solid var(--neutral-hairline);
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.header__cta:hover { background: var(--neutral-tint); }
+
+.burger { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; }
+.burger span {
+  display: block;
+  width: 20px;
+  height: 1.5px;
+  background: currentColor;
+  position: relative;
+  transition: background var(--dur) var(--ease);
+}
+.burger span::before, .burger span::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 20px;
+  height: 1.5px;
+  background: currentColor;
+  transition: transform var(--dur) var(--ease);
+}
+.burger span::before { top: -6px; }
+.burger span::after { top: 6px; }
+.burger[aria-expanded="true"] span { background: transparent; }
+.burger[aria-expanded="true"] span::before {
+  top: 0;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  clip-path: polygon(9% 0, 50% 41%, 91% 0, 100% 9%, 59% 50%, 100% 91%, 91% 100%, 50% 59%, 9% 100%, 0 91%, 41% 50%, 0 9%);
+}
+.burger[aria-expanded="true"] span::after { display: none; }
+
+/* --- Areas dropdown -------------------------------------------------------
+   The five areas of work hang off "What we do" rather than occupying a second
+   sticky band under the bar. */
+.navitem { position: relative; display: inline-flex; }
+
+.navlink--menu { display: inline-flex; align-items: center; gap: 8px; }
+.navlink__mark {
+  width: 5px;
+  height: 5px;
+  background: currentColor;
+  opacity: 0.55;
+  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.navlink--menu[aria-expanded="true"] .navlink__mark { opacity: 1; transform: translateY(1px); }
+
+.navmenu {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 50%;
+  translate: -50% 0;
+  min-width: 268px;
+  padding: var(--space-4);
+  background: var(--brand-ink);
+  border: 1px solid var(--line-on-ink-strong);
+  border-radius: var(--radius-card);
+  display: grid;
+  gap: 2px;
+  z-index: 120;
+}
+/* Bridges the gap between the item and the panel so the pointer can cross. */
+.navmenu::before {
+  content: "";
+  position: absolute;
+  inset: -16px 0 100% 0;
+}
+.navmenu__label {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary-on-ink);
+  opacity: 0.75;
+  padding: 0 var(--space-3) var(--space-3);
+}
+.navmenu__link {
+  display: block;
+  padding: 9px var(--space-3);
+  font-size: 14.5px;
+  color: var(--text-secondary-on-ink);
+  border-radius: var(--radius-control);
+  border-left: 2px solid transparent;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+              border-color var(--dur) var(--ease);
+}
+.navmenu__link:hover { background: rgba(255, 253, 249, 0.07); color: var(--text-on-ink); }
+.navmenu__link[data-active="true"] {
+  color: var(--text-on-ink);
+  border-left-color: var(--brand-naples);
+  background: rgba(255, 253, 249, 0.05);
+}
+
+.drawer__sub {
+  display: block;
+  font-family: var(--font-ui) !important;
+  font-size: 15px !important;
+  padding-block: 12px !important;
+  padding-left: var(--space-4);
+  color: var(--text-secondary-on-ink);
+  border-bottom: 0 !important;
+}
+
+/* --- Mobile drawer -------------------------------------------------------- */
+.drawer {
+  position: fixed;
+  inset: calc(var(--header-h) + var(--frame)) var(--frame) var(--frame);
+  z-index: 95;
+  background: var(--brand-ink);
+  border: 1px solid var(--line-on-ink);
+  border-radius: var(--radius-card);
+  padding: var(--space-6) var(--space-5) var(--space-7);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.drawer a {
+  display: block;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--line-on-ink);
+}
+.drawer .btn { margin-top: var(--space-5); }
+
+@media (max-width: 860px) {
+  .header__nav { display: none; }
+  .header__cta { display: none; }
+  .burger { display: inline-flex; }
+}
+
+/* ============================================================================
+   Hero — home. Full-bleed image carousel with a translucent overlay.
+
+   The photograph bleeds to all four edges and the header sits over it, so the
+   page opens on an image rather than on a boxed panel. The overlay is flat
+   colour at alpha; gradients are barred, and a solid scrim is what carries
+   the contrast anyway.
+   ========================================================================= */
+
+/* The board. At the top of the page the hero runs to all four edges; as you
+   scroll it draws in and its corners round, so the page reads as a panel
+   sitting on the Ink ground. The inset and the radius are driven by scroll
+   position in HomeHero, and both stay at zero under reduced motion. */
+.hero {
+  position: relative;
+  isolation: isolate;
+  will-change: margin, border-radius;
+  min-height: min(88vh, 820px);
+  display: flex;
+  align-items: flex-end;
+  padding-top: calc(var(--header-h) + var(--frame) + clamp(40px, 8vw, 110px));
+  padding-bottom: clamp(32px, 4.5vw, 60px);
+  margin-top: calc((var(--header-h) + var(--frame)) * -1);
+  overflow: hidden;
+  background: var(--brand-ink);
+}
+
+.hero__media { position: absolute; inset: 0; z-index: -1; }
+.hero__frame { position: absolute; inset: 0; }
+.hero__frame img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; }
+
+.hero__nofoto {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--brand-ink);
+  padding: clamp(24px, 6vw, 90px);
+}
+.hero__nofoto > svg { width: min(620px, 70%); }
+
+/* Flat, not a gradient. Ink at 0.62 puts Card type past 7:1 on the worst
+   frame of the five photographs. */
+.hero__scrim { position: absolute; inset: 0; background: var(--ink-a74); }
+
+/* The brand's own grid, carried as a texture. Visible grid guides are on
+   brand; this is the module lattice at low contrast, not decoration. */
+.hero__grid {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='1' fill='%23D8D6D4' fill-opacity='.05'/%3E%3Crect width='1' height='96' fill='%23D8D6D4' fill-opacity='.05'/%3E%3C/svg%3E");
+  mask-image: radial-gradient(ellipse 120% 80% at 50% 40%, #000 35%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 120% 80% at 50% 40%, #000 35%, transparent 100%);
+}
+
+.hero__inner { position: relative; z-index: 1; width: 100%; }
+
+.hero__lead { max-width: min(68%, 860px); }
+.hero .h1-home { margin-top: var(--space-4); }
+
+/* The one typographic flourish: the closing phrase in serif italic. Source
+   Serif 4 is the brand's page-title face, so this stays inside the four. */
+.h1-em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  word-spacing: 0;
+}
+
+.hero__cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: clamp(16px, 2vw, 24px);
+  margin-top: clamp(32px, 5vw, 64px);
+  align-items: stretch;
+}
+
+/* Translucent cards over the photograph. Flat alpha plus a hairline: no
+   shadow, no gradient, no depth trickery. */
+.hcard {
+  background: var(--ink-a80);
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+  border: 1px solid var(--line-on-ink-strong);
+  border-radius: var(--radius-card);
+  padding: clamp(20px, 2.6vw, 30px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.hcard:hover { border-color: rgba(216, 214, 212, 0.45); }
+.hcard--accent { border-top: 3px solid var(--accent, var(--brand-naples)); }
+.hcard__body { font-size: var(--type-body-sm); line-height: 1.65; color: var(--text-secondary-on-ink); }
+
+.hero__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-top: var(--space-5); }
+
+/* Ghost control that has to sit over a photograph rather than a flat ground. */
+.btn--glass {
+  background: rgba(255, 253, 249, 0.10);
+  color: var(--text-on-ink);
+  border-color: var(--line-on-ink-strong);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+.btn--glass:hover { background: rgba(255, 253, 249, 0.20); border-color: var(--neutral-card); }
+
+.hero__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: clamp(24px, 3vw, 36px);
+}
+.hero__count { margin-left: auto; font-family: var(--font-mono); font-size: 12.5px; color: var(--text-secondary-on-ink); }
+
+.hero__dots { display: flex; gap: 2px; margin-left: var(--space-2); }
+/* The bar reads as 22x3, but the button is a 26x24 hit area: a 3px target is
+   not reliably tappable. */
+.hero__dot {
+  width: 26px;
+  height: 24px;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.hero__dot::before {
+  content: "";
+  display: block;
+  width: 22px;
+  height: 3px;
+  background: var(--line-on-ink-strong);
+  transition: background var(--dur) var(--ease);
+}
+.hero__dot[data-active="true"]::before { background: var(--accent, var(--brand-naples)); }
+.hero__dot:hover::before { background: var(--text-secondary-on-ink); }
+
+@media (max-width: 860px) {
+  .hero { min-height: min(94vh, 760px); }
+  .hero__lead { max-width: none; }
+  .hero__cards { grid-template-columns: 1fr; }
+  .hero__actions .btn { flex: 1 1 auto; }
+}
+
+/* ============================================================================
+   Hero — every other page
+   ========================================================================= */
+
+.pagehero {
+  padding-top: calc(var(--header-h) + var(--frame) + clamp(32px, 4.5vw, 60px));
+  /* Small, because the section below brings its own --sec-y. Doubling the
+     two is what leaves a hole under every page hero. */
+  padding-bottom: clamp(8px, 1.5vw, 20px);
+  position: relative;
+  overflow: hidden;
+}
+.pagehero__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: clamp(32px, 5vw, 72px);
+  align-items: center;
+}
+.pagehero .h1-page { margin-top: var(--space-4); }
+.pagehero .lede { margin-top: var(--space-5); }
+
+@media (max-width: 860px) {
+  .pagehero__grid { grid-template-columns: 1fr; }
+  .pagehero__art { display: none; }
+}
+
+/* ============================================================================
+   Card grid — hairline-separated tiles
+   ========================================================================= */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(232px, 100%), 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.card {
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-6) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: background var(--dur) var(--ease);
+}
+a.card:hover { background: var(--raised); }
+.card__title { font-family: var(--font-serif); font-size: 18px; font-weight: 600; line-height: 1.3; }
+.card__body { font-size: var(--type-body-sm); line-height: 1.6; color: var(--text-secondary); }
+.card__tag { margin-top: auto; padding-top: var(--space-4); }
+
+/* Accent keyline: the per-service-line identity, one hue each. */
+.card--accent { border-top: 3px solid var(--accent); margin-top: -1px; }
+
+@media (max-width: 820px) {
+  .cards { grid-template-columns: 1fr; }
+}
+
+/* ============================================================================
+   Area block — name and lead in one column, body in the other
+   ========================================================================= */
+
+.area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: clamp(24px, 4vw, 64px);
+  padding-block: clamp(34px, 4.4vw, 56px);
+  border-top: 1px solid var(--line);
+}
+.area__name {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+.area__name::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  background: var(--accent, var(--brand-naples));
+  transform: translateY(-2px);
+}
+.area__lead { margin-top: var(--space-3); color: var(--text-secondary); font-size: var(--type-body-sm); }
+.area__body { font-size: var(--type-body); line-height: 1.7; }
+.area__foot { margin-top: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; }
+
+@media (max-width: 820px) { .area { grid-template-columns: 1fr; gap: var(--space-4); } }
+
+/* ============================================================================
+   Service block — Application and Outcome in two columns
+   ========================================================================= */
+
+.svc { border-top: 1px solid var(--line-strong); padding-top: clamp(28px, 3.6vw, 44px); margin-top: clamp(40px, 5vw, 64px); }
+.svc__head { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-6); }
+.svc__name { font-family: var(--font-serif); font-size: 26px; font-weight: 600; line-height: 1.2; }
+.svc__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(24px, 4vw, 64px); }
+.svc__coltitle {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 760px) { .svc__cols { grid-template-columns: 1fr; } }
+
+/* --- Hairline list with square markers ------------------------------------ */
+.hlist > li {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: var(--space-4);
+  align-items: start;
+  padding-block: var(--space-4);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--type-body-sm);
+  line-height: 1.6;
+}
+.hlist > li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  background: var(--accent, var(--text-secondary));
+  margin-top: 8px;
+}
+.hlist--plain > li::before { background: var(--text-secondary); opacity: 0.55; }
+
+/* ============================================================================
+   Numbered principles — leading-zero mono numerals
+   ========================================================================= */
+
+.steps { display: grid; gap: 0; }
+.step {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 40px);
+  padding-block: clamp(26px, 3.2vw, 38px);
+  border-top: 1px solid var(--line);
+}
+.step__n {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  padding-top: 4px;
+}
+.step__t { font-family: var(--font-serif); font-size: 20px; font-weight: 600; line-height: 1.3; }
+.step__b { margin-top: var(--space-3); color: var(--text-secondary); font-size: var(--type-body-sm); line-height: 1.65; }
+
+@media (max-width: 560px) { .step { grid-template-columns: 1fr; gap: var(--space-2); } }
+
+/* ============================================================================
+   Case study
+   ========================================================================= */
+
+.case { border-top: 1px solid var(--line-strong); padding-top: clamp(30px, 4vw, 48px); margin-top: clamp(44px, 5.4vw, 72px); }
+.case__top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: clamp(24px, 4vw, 56px);
+  align-items: start;
+}
+.case__fig {
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: var(--recessed);
+  aspect-ratio: 4 / 3;
+}
+.case__fig img { width: 100%; height: 100%; object-fit: cover; }
+.case__name { font-family: var(--font-serif); font-size: 26px; font-weight: 600; line-height: 1.2; }
+.case__lead { margin-top: var(--space-3); color: var(--text-secondary); }
+
+.caserow {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 40px);
+  padding-block: var(--space-5);
+  border-top: 1px solid var(--line);
+  font-size: var(--type-body-sm);
+  line-height: 1.7;
+}
+.caserow__label {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+  padding-top: 3px;
+}
+.case__tags { margin-top: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
+
+/* Result figures as a hairline row, not coloured tiles. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr));
+  border-top: 1px solid var(--line);
+  margin-top: var(--space-5);
+}
+.stat { padding: var(--space-5) var(--space-5) var(--space-5) 0; border-bottom: 1px solid var(--line); }
+.stat__v {
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 3.6vw, 42px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.015em;
+  font-variant-numeric: tabular-nums;
+}
+.stat__l { margin-top: var(--space-2); font-size: 13.5px; line-height: 1.45; color: var(--text-secondary); }
+.stat__src { margin-top: var(--space-1); font-family: var(--font-mono); font-size: 11.5px; color: var(--text-secondary); opacity: 0.8; }
+
+@media (max-width: 820px) { .case__top { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .caserow { grid-template-columns: 1fr; gap: var(--space-2); } }
+
+/* ============================================================================
+   Pull quote
+   ========================================================================= */
+
+.quote {
+  border-left: 3px solid var(--accent, var(--brand-naples));
+  padding-left: clamp(20px, 3vw, 32px);
+  max-width: 54ch;
+}
+.quote__t { font-family: var(--font-serif); font-size: var(--type-quote); line-height: 1.55; font-weight: 400; }
+.quote__a { margin-top: var(--space-4); font-size: 14px; color: var(--text-secondary); }
+
+/* ============================================================================
+   Statement band — full bleed, one claim line plus one supporting line
+   ========================================================================= */
+
+.band { padding-block: clamp(52px, 6.4vw, 92px); }
+.band__t { font-family: var(--font-serif); font-size: var(--type-band); font-weight: 600; line-height: 1.25; max-width: 38ch; }
+.band__s { margin-top: var(--space-4); max-width: 54ch; font-size: var(--type-body-sm); }
+
+/* The one Naples mass, where a page spends its yellow on area rather than on
+   a control. Ink text on Naples is 9.04:1. */
+.band--naples { background: var(--brand-naples); color: var(--brand-ink); }
+.band--naples .band__s { color: var(--text-secondary-on-fill); }
+
+/* ============================================================================
+   Founder's note
+   ========================================================================= */
+
+.note__cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(24px, 4vw, 64px);
+  margin-top: clamp(32px, 4vw, 56px);
+}
+.note__cols p { font-size: var(--type-body-sm); line-height: 1.75; color: var(--text-secondary); }
+.note__cols p + p { margin-top: var(--space-4); }
+.note__sign { margin-top: var(--space-7); display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); text-align: right; }
+.note__name { font-weight: 600; font-size: 15px; }
+.note__role { font-size: 13.5px; color: var(--text-secondary); }
+
+@media (max-width: 760px) { .note__cols { grid-template-columns: 1fr; } }
+
+/* ============================================================================
+   Team
+   ========================================================================= */
+
+.team { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(268px, 100%), 1fr)); gap: var(--space-5); }
+.member {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.member__photo { aspect-ratio: 4 / 3.2; background: var(--recessed); }
+.member__photo img { width: 100%; height: 100%; object-fit: cover; }
+.member__body { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); flex: 1; }
+.member__name { font-family: var(--font-serif); font-size: 21px; font-weight: 600; line-height: 1.25; }
+.member__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.member__role {
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.member__role::before { content: ""; width: 7px; height: 7px; background: var(--accent, var(--brand-naples)); flex: 0 0 auto; }
+.member__toggle { font-size: 13px; color: var(--text-secondary); display: inline-flex; align-items: center; gap: 7px; }
+.member__toggle:hover { color: var(--text); }
+.member__bio { font-size: var(--type-body-sm); line-height: 1.65; color: var(--text-secondary); border-top: 1px solid var(--line); padding-top: var(--space-4); }
+.member__creds { margin-top: var(--space-3); }
+
+.member--empty { border-style: dashed; }
+.member--empty .member__photo { display: flex; align-items: center; justify-content: center; }
+
+/* ============================================================================
+   Module grammar — the brand's own graphic language
+   Squares on a zero-gutter grid, joined in three states. Used as the page's
+   graphic element wherever the reference build used a module cluster.
+   ========================================================================= */
+
+.modules { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; width: 100%; max-width: 320px; }
+.module { aspect-ratio: 1; }
+.module--r { border-radius: 35%; }
+
+/* ============================================================================
+   Contact form
+   ========================================================================= */
+
+.form { display: grid; gap: var(--space-5); max-width: 640px; }
+.field { display: grid; gap: var(--space-2); }
+.field__label { font-size: 14px; font-weight: 500; }
+.field__hint { font-size: 13px; color: var(--text-secondary); }
+/* Scoped away from the radio inputs below, which are visually hidden and must
+   not inherit the full-width text-input box: doing so makes them overflow the
+   page, since they are absolutely positioned. */
+.field input:not([type="radio"]):not([type="checkbox"]),
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--raised);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  color: var(--text);
+  font-size: 15.5px;
+  transition: border-color var(--dur) var(--ease);
+}
+.field input::placeholder, .field textarea::placeholder { color: var(--text-secondary); opacity: 0.7; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--text-secondary); }
+.field textarea { min-height: 132px; resize: vertical; line-height: 1.6; }
+.field--error input, .field--error textarea, .field--error select { border-color: var(--text); border-width: 2px; }
+.field__error { font-size: 13px; color: var(--text); font-weight: 500; }
+
+.choice { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.choice label {
+  position: relative;
+  padding: 12px 16px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font-size: 14.5px;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+/* Hidden without leaving the flow: inset to the label, never sized by the
+   text-input rule above. */
+.choice input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  appearance: none;
+}
+.choice label:has(input:checked) { border-color: var(--text); border-width: 2px; padding: 11px 15px; }
+.choice label:has(input:focus-visible) { outline: 2px solid var(--brand-naples); outline-offset: 2px; }
+
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+/* The honeypot is never seen, but an unstyled control still paints a
+   browser-default border. Nothing on the site should use a colour that is
+   not in the palette, visible or not. */
+.hp input { border: 0; background: none; appearance: none; }
+
+.formnote {
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-control);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+.formnote--ok { border-color: var(--text-secondary); }
+.formnote--err { border-color: var(--text); border-width: 2px; }
+
+/* ============================================================================
+   Footer — Halite, the single cool close on every page
+   ========================================================================= */
+
+.footer { padding-top: clamp(52px, 6vw, 84px); padding-bottom: var(--space-6); }
+.footer__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  gap: clamp(28px, 4vw, 56px);
+}
+.footer__brand svg { height: 30px; width: auto; }
+.footer__line { margin-top: var(--space-5); max-width: 34ch; font-size: var(--type-body-sm); line-height: 1.6; color: var(--text-secondary); }
+.footer__h {
+  font-family: var(--font-ui);
+  font-size: var(--type-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-4);
+}
+.footer__list { display: grid; gap: var(--space-1); }
+/* A 21px-tall link in a stacked list is fiddly on a phone. The inline-flex
+   and min-height give every one of them a 28px target without changing the
+   rhythm of the column. */
+.footer__list a,
+.footer__contact a {
+  font-size: var(--type-body-sm);
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  transition: color var(--dur) var(--ease);
+}
+.footer__list a:hover, .footer__contact a:hover { color: var(--brand-cassiopeia); }
+.footer__contact { display: grid; gap: var(--space-3); font-size: var(--type-body-sm); line-height: 1.6; }
+.footer__contact address { font-style: normal; color: var(--text-secondary); }
+.footer__bottom {
+  margin-top: clamp(40px, 5vw, 64px);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 860px) { .footer__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .footer__grid { grid-template-columns: 1fr; } }
+
+/* ============================================================================
+   Utilities
+   ========================================================================= */
+
+.stack { display: grid; }
+.stack--2 { gap: var(--space-2); }
+.stack--3 { gap: var(--space-3); }
+.stack--4 { gap: var(--space-4); }
+.stack--5 { gap: var(--space-5); }
+.stack--6 { gap: var(--space-6); }
+.stack--7 { gap: var(--space-7); }
+
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); }
+.split--lead { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
+@media (max-width: 820px) { .split, .split--lead { grid-template-columns: 1fr; } }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.gapbox {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+  color: var(--text-secondary);
+  font-size: var(--type-body-sm);
+  line-height: 1.6;
+}
+
+/* Draft flag: content generated from existing material and awaiting sign-off.
+   Visible to editors in the admin panel; on the public site it renders as
+   ordinary copy with no marker. */
+.draftflag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+/* ============================================================================
+   Motion
+   ========================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .hero__slide { transition: none; }
+}
+
+/* ============================================================================
+   Print — the chrome drops away
+   ========================================================================= */
+
+@media print {
+  .header, .drawer, .hero__controls, .skip, .btn { display: none !important; }
+  body, .on-ink, .on-halite, .on-card, .on-page {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .hero { padding-top: 0; margin-top: 0; }
+  .hero__stage { min-height: 0; }
+  a { text-decoration: underline; }
+}
+
+
+/* ============================================================================
+   Reading progress, and section texture
+   ========================================================================= */
+
+.progress {
+  position: fixed;
+  inset-inline: 0;
+  top: 0;
+  z-index: 500;
+  height: 2px;
+  transform-origin: 0 50%;
+  background: var(--brand-naples);
+}
+
+/* The brand's own grid at low contrast. Visible grid guides are on brand, so
+   this is the module lattice rather than decoration. Masked so it fades out
+   before it reaches a hairline or an edge. */
+.textured { position: relative; isolation: isolate; }
+.textured::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='1' fill='%23D8D6D4' fill-opacity='.045'/%3E%3Crect width='1' height='96' fill='%23D8D6D4' fill-opacity='.045'/%3E%3C/svg%3E");
+  mask-image: radial-gradient(ellipse 90% 70% at 70% 30%, #000 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 70% 30%, #000 0%, transparent 75%);
+}
+
+/* Cards gain a little life on hover: a surface change and a hairline change,
+   which is how the brand carries state. No shadow, no scale jump. */
+a.card { position: relative; }
+a.card::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  background: var(--accent, var(--brand-naples));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 260ms var(--ease);
+}
+a.card:hover::after { transform: scaleX(1); }
+
+.case__fig img,
+.member__photo img,
+.pagehero__art img {
+  transition: transform 700ms var(--ease);
+}
+.case:hover .case__fig img,
+.member:hover .member__photo img { transform: scale(1.03); }
+
+@media (prefers-reduced-motion: reduce) {
+  .case__fig img, .member__photo img, .pagehero__art img { transition: none; }
+  a.card::after { transition: none; }
+  .progress { display: none; }
+}
+
+
+/* Page-hero photograph: same footprint as the module cluster it replaces. */
+.pagehero__art img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--line-on-ink);
+}
+
+
+/* ============================================================================
+   Filled tiles
+
+   Build notes, warm pages (home, What we do, Who we serve, About, Contact):
+   "use Naples light and Tint for tiles and Ink for headings". Cool pages (the
+   five pillar pages and Customer stories) use Cassiopeia. Naples light is
+   "yellow at area without shouting" and is not the page's single Naples form,
+   which stays the call to action.
+   ========================================================================= */
+
+.cards--band { border: 0; gap: var(--space-3); }
+.cards--band .card {
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--brand-naples-light);
+  color: var(--brand-ink);
+}
+.cards--band .card__body,
+.cards--band .tag { color: var(--text-secondary-on-fill); }   /* 5.77:1 on Naples light */
+.cards--band .card__title { color: var(--brand-ink); }
+
+/* The cool-voice equivalent, for the pillar pages and Customer stories. */
+.cards--band-cool .card { background: var(--brand-cassiopeia); }
+.cards--band-cool .card__body,
+.cards--band-cool .tag { color: #2C443F; }     /* 7.4:1 on Cassiopeia */
+
+/* Filled tiles take the fill of whatever ground they are on, so text
+   contrast is never inherited from one ground onto another. */
+.cards--tint .card { background: var(--tile); border-color: transparent; }
+.cards--tint a.card:hover { background: var(--tile-hover); }
+.on-card .cards--tint .card__body,
+.on-page .cards--tint .card__body,
+.on-card .cards--tint .tag,
+.on-page .cards--tint .tag { color: var(--text-secondary-on-fill); }   /* 5.88:1 on Tint */
+
+/* A reveal wrapper sits between the grid and the tile, so the wrapper is the
+   grid item. Without these the tile only covers its own text and the fills
+   stagger down the row. */
+.cards > * { display: flex; min-width: 0; }
+.cards > .card { display: flex; }
+.cards .card { width: 100%; height: 100%; }
+
+/* ============================================================================
+   Service-line identity
+
+   Handoff section 2: each area of work recognisable on sight. The glyph, the
+   accent keyline and the accent module composition are the three devices that
+   do that, and they use the same five accents throughout.
+   ========================================================================= */
+
+.card__icon { margin-bottom: var(--space-3); color: var(--text-secondary); }
+.area__icon { margin-bottom: var(--space-4); color: var(--text-secondary); }
+.area__name--icon::before { display: none; }
+
+/* The arrow that marks a tile as a link, drawn rather than set as a glyph. */
+.card__go {
+  margin-top: var(--space-4);
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  position: relative;
+  align-self: flex-start;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.card__go::before,
+.card__go::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+.card__go::before { left: 7px; right: 7px; top: 50%; height: 1px; transform: translateY(-50%); }
+.card__go::after {
+  right: 6px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  background: currentColor;
+  clip-path: polygon(28% 6%, 39% 17%, 72% 50%, 39% 83%, 28% 94%, 72% 50%);
+}
+a.card:hover .card__go { background: var(--accent); border-color: var(--accent); color: var(--brand-ink); }
+
+/* --- The service index panel ---------------------------------------------- */
+
+.sindex {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: var(--space-3);
+}
+.sitem {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--tile);
+  border: 1px solid transparent;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-card);
+  height: 100%;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.sitem:hover { background: var(--tile-hover); border-color: var(--line-strong); border-left-color: var(--accent); }
+.sitem__icon { color: var(--text-secondary); flex: 0 0 auto; }
+.sitem__text { display: grid; gap: 2px; min-width: 0; }
+.sitem__title { font-family: var(--font-serif); font-size: 16.5px; font-weight: 600; line-height: 1.3; }
+.sitem__lead { font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); }
+.on-card .sitem__lead, .on-page .sitem__lead { color: var(--text-secondary-on-fill); }
+.sitem__go {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+.sitem:hover .sitem__go { background: var(--accent); border-color: var(--accent); color: var(--brand-ink); }
+
+@media (max-width: 560px) {
+  .sitem { padding: var(--space-4); gap: var(--space-3); }
+  .sitem__icon { display: none; }
+}
+
+/* --- Team disclosure ------------------------------------------------------- */
+
+.member__toggle { font-size: 13px; display: inline-flex; align-items: center; gap: 8px; min-height: 28px; }
+.member__chev {
+  width: 11px;
+  height: 11px;
+  flex: 0 0 auto;
+  background: currentColor;
+  /* A drawn chevron rather than a rotated box. */
+  clip-path: polygon(50% 72%, 6% 28%, 17% 17%, 50% 50%, 83% 17%, 94% 28%);
+  transition: transform var(--dur) var(--ease);
+}
+.member__chev--up { transform: scaleY(-1); }
+.member__meta { flex-wrap: wrap; row-gap: var(--space-2); }
+.member__bio { border-top: 1px solid var(--line); padding-top: var(--space-4); margin-top: var(--space-4); }
+
+/* --- Story cards -----------------------------------------------------------
+   A tile carrying a figure becomes a story card: image, headline, category
+   with its square dot, and the arrow. The client's Notion markup of the Scion
+   Customer Stories grid. */
+/* A grid of story cards separates by gap and border rather than by shared
+   hairline: butted photographs read as one strip. */
+.cards:has(.card__fig) {
+  grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+  gap: var(--space-4);
+  border: 0;
+}
+.cards:has(.card__fig) .card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}
+.cards .card:has(.card__fig) { padding: 0; overflow: hidden; }
+.card__fig { display: block; aspect-ratio: 16 / 10; background: var(--recessed); overflow: hidden; }
+.card__fig img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--ease); }
+a.card:hover .card__fig img { transform: scale(1.04); }
+.cards .card:has(.card__fig) > :not(.card__fig) { margin-inline: var(--space-5); }
+.cards .card:has(.card__fig) > .card__title { margin-top: var(--space-5); }
+.cards .card:has(.card__fig) > .card__go { margin-bottom: var(--space-5); }
+
+/* --- Image pattern ---------------------------------------------------------
+   Two figures offset against each other on the module grid — the bridged
+   relationship at photographic scale — with the brand's grid showing through
+   the gap between them. */
+.ipattern { position: relative; overflow: hidden; }
+.ipattern__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(28px, 5vw, 76px);
+  align-items: center;
+}
+.ipattern__figs { position: relative; padding-bottom: 16%; }
+.ipattern__figs figure { margin: 0; overflow: hidden; border-radius: var(--radius-card); }
+.ipattern__figs img { width: 100%; height: 100%; object-fit: cover; }
+.ipattern__a { width: 72%; margin-left: auto; aspect-ratio: 4 / 5; }
+.ipattern__b {
+  width: 62%;
+  aspect-ratio: 1;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  border: 1px solid var(--line-strong);
+}
+/* The grid shows only behind the figures, which is where the offset reads. */
+.ipattern__figs::before {
+  content: "";
+  position: absolute;
+  inset: -8% -6%;
+  z-index: -1;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='1' fill='%23D8D6D4' fill-opacity='.07'/%3E%3Crect width='1' height='96' fill='%23D8D6D4' fill-opacity='.07'/%3E%3C/svg%3E");
+}
+.on-card .ipattern__figs::before,
+.on-page .ipattern__figs::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Crect width='72' height='1' fill='%2333332C' fill-opacity='.07'/%3E%3Crect width='1' height='72' fill='%2333332C' fill-opacity='.07'/%3E%3C/svg%3E");
+}
+
+@media (max-width: 820px) {
+  .ipattern__grid { grid-template-columns: 1fr; }
+  .ipattern__figs { padding-bottom: 22%; }
+}
+
+/* ============================================================================
+   Page loader
+   ========================================================================= */
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--brand-ink);
+  color: var(--text-on-ink);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(24px, 4vw, 52px) var(--gut);
+  overflow: hidden;
+}
+
+/* The same lattice the hero carries, so the curtain and the page behind it
+   are the same material. */
+.loader__grid {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Crect width='96' height='1' fill='%23D8D6D4' fill-opacity='.05'/%3E%3Crect width='1' height='96' fill='%23D8D6D4' fill-opacity='.05'/%3E%3C/svg%3E");
+  mask-image: radial-gradient(ellipse 110% 80% at 50% 45%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 110% 80% at 50% 45%, #000 30%, transparent 100%);
+}
+
+.loader__brand { position: relative; }
+
+.loader__line {
+  position: relative;
+  align-self: center;
+  justify-self: center;
+  max-width: 22ch;
+  text-align: center;
+  font-family: var(--font-serif);
+  font-size: clamp(20px, 3.2vw, 32px);
+  line-height: 1.25;
+  color: var(--text-on-ink);
+}
+
+.loader__foot {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(20px, 4vw, 48px);
+}
+.loader__rule { flex: 1; height: 2px; background: var(--line-on-ink-strong); overflow: hidden; }
+.loader__fill { height: 100%; background: var(--brand-naples); transition: width 80ms linear; }
+.loader__pct { font-size: 0.34em; color: var(--text-secondary-on-ink); margin-left: 0.1em; }
+.loader__count {
+  font-family: var(--font-mono);
+  font-size: clamp(42px, 9vw, 96px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: var(--text-on-ink);
+}
+
+/* Never shown to anyone who has asked for less motion, and hidden before
+   hydration rather than after it. */
+@media (prefers-reduced-motion: reduce) {
+  .loader { display: none !important; }
+}
+
+/* Script lifts the curtain, so without it the curtain is never drawn. */
+.no-js .loader { display: none !important; }
