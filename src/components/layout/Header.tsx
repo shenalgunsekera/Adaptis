@@ -50,7 +50,11 @@ export function Header({
   const closeTimer = useRef<number | null>(null);
 
   /* The bar forms on scroll, over the same distance and on the same curve as
-     the hero board, so the two read as one gesture. */
+     the hero board, so the two read as one gesture.
+
+     It stays welded to the top edge of the viewport: only the sides draw in
+     and only the bottom corners round, so the bar reads as hanging from the
+     top rather than floating with a gap above it. */
   const { scrollY } = useScroll();
   const eased = useSpring(scrollY, { stiffness: 120, damping: 28, restDelta: 0.5 });
   const insetRaw = useTransform(eased, [0, 340], [0, 14], { clamp: true });
@@ -73,7 +77,12 @@ export function Header({
 
   const barStyle = reduce
     ? { background: "var(--brand-ink)" }
-    : { marginInline: inset, marginTop: inset, borderRadius: radius, background };
+    : {
+        marginInline: inset,
+        borderBottomLeftRadius: radius,
+        borderBottomRightRadius: radius,
+        background,
+      };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);

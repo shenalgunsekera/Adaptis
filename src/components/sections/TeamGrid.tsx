@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
 import { Modules, accentVar } from "@/components/brand/Modules";
+import { Img } from "@/components/Img";
 import type { TeamSection } from "@/lib/types";
 
 /* ============================================================================
@@ -46,8 +47,7 @@ export function TeamGrid({ data }: { data: TeamSection }) {
               >
                 <div className="member__photo">
                   {m.photo.src ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.photo.src} alt={m.photo.alt} loading="lazy" decoding="async" />
+                    <Img src={m.photo.src} alt={m.photo.alt} sizes="(max-width: 860px) 100vw, 33vw" />
                   ) : (
                     <div style={{ width: "46%", opacity: 0.6 }}>
                       <Modules accent={m.accent} />

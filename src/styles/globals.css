@@ -538,7 +538,7 @@ input, textarea, select { font: inherit; color: inherit; }
 
 .hero__media { position: absolute; inset: 0; z-index: -1; }
 .hero__frame { position: absolute; inset: 0; }
-.hero__frame img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 62%; }
+.hero__frame img { object-position: 50% 62%; }
 
 .hero__nofoto {
   width: 100%;
@@ -822,12 +822,13 @@ a.card:hover { background: var(--raised); }
   align-items: start;
 }
 .case__fig {
+  position: relative;
   border-radius: var(--radius-card);
   overflow: hidden;
-  background: var(--recessed);
+  background: var(--brand-ink);
   aspect-ratio: 4 / 3;
 }
-.case__fig img { width: 100%; height: 100%; object-fit: cover; }
+
 .case__name { font-family: var(--font-serif); font-size: 26px; font-weight: 600; line-height: 1.2; }
 .case__lead { margin-top: var(--space-3); color: var(--text-secondary); }
 
@@ -928,8 +929,7 @@ a.card:hover { background: var(--raised); }
   display: flex;
   flex-direction: column;
 }
-.member__photo { aspect-ratio: 4 / 3.2; background: var(--recessed); }
-.member__photo img { width: 100%; height: 100%; object-fit: cover; }
+.member__photo { position: relative; aspect-ratio: 4 / 3.2; background: var(--brand-ink); overflow: hidden; }
 .member__body { padding: var(--space-5); display: flex; flex-direction: column; gap: var(--space-4); flex: 1; }
 .member__name { font-family: var(--font-serif); font-size: 21px; font-weight: 600; line-height: 1.25; }
 .member__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
@@ -1216,13 +1216,15 @@ a.card:hover::after { transform: scaleX(1); }
 }
 
 
-/* Page-hero photograph: same footprint as the module cluster it replaces. */
-.pagehero__art img {
-  width: 100%;
+/* Page-hero photograph: same footprint as the module cluster it replaces,
+   with the box reserved so nothing shifts when the image lands. */
+.pagehero__art--photo {
+  position: relative;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
   border-radius: var(--radius-card);
   border: 1px solid var(--line-on-ink);
+  overflow: hidden;
+  background: var(--brand-ink);
 }
 
 
@@ -1384,8 +1386,8 @@ a.card:hover .card__go { background: var(--accent); border-color: var(--accent);
   border-radius: var(--radius-card);
 }
 .cards .card:has(.card__fig) { padding: 0; overflow: hidden; }
-.card__fig { display: block; aspect-ratio: 16 / 10; background: var(--recessed); overflow: hidden; }
-.card__fig img { width: 100%; height: 100%; object-fit: cover; transition: transform 700ms var(--ease); }
+.card__fig { position: relative; display: block; aspect-ratio: 16 / 10; background: var(--brand-ink); overflow: hidden; }
+.card__fig img { transition: transform 700ms var(--ease); }
 a.card:hover .card__fig img { transform: scale(1.04); }
 .cards .card:has(.card__fig) > :not(.card__fig) { margin-inline: var(--space-5); }
 .cards .card:has(.card__fig) > .card__title { margin-top: var(--space-5); }
@@ -1403,8 +1405,7 @@ a.card:hover .card__fig img { transform: scale(1.04); }
   align-items: center;
 }
 .ipattern__figs { position: relative; padding-bottom: 16%; }
-.ipattern__figs figure { margin: 0; overflow: hidden; border-radius: var(--radius-card); }
-.ipattern__figs img { width: 100%; height: 100%; object-fit: cover; }
+.ipattern__figs figure { position: relative; margin: 0; overflow: hidden; border-radius: var(--radius-card); background: var(--brand-ink); }
 .ipattern__a { width: 72%; margin-left: auto; aspect-ratio: 4 / 5; }
 .ipattern__b {
   width: 62%;

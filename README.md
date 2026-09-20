@@ -16,7 +16,14 @@ npm install
 npm run dev        # http://localhost:3000, admin at /admin
 npm run build
 npm run typecheck
-npm run audit      # layout and accessibility, in a real browser
+npm run audit      # layout, accessibility and contrast, in a real browser
+npm run perf       # Core Web Vitals against a budget
+npm run compliance # design-system rules: shadows, radii, faces, case
+npm run colours    # every painted colour against the canonical set
+npm run pairings   # the combinations the brand bars outright
+npm run spacing    # every literal step on the 4px scale
+npm run tokens     # live values vs the design system's token files
+npm run images     # re-encode photography and rebuild blur placeholders
 ```
 
 **Start here: [docs/SETUP.md](docs/SETUP.md)** — Firebase, environment,

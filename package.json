@@ -13,7 +13,9 @@
     "colours": "node scripts/colours.mjs",
     "pairings": "node scripts/pairings.mjs",
     "compliance": "node scripts/compliance.mjs",
-    "spacing": "node scripts/spacing.mjs"
+    "spacing": "node scripts/spacing.mjs",
+    "images": "node scripts/images.mjs",
+    "perf": "node scripts/perf.mjs"
   },
   "dependencies": {
     "firebase": "^11.1.0",
@@ -23,7 +25,8 @@
     "next": "^15.5.25",
     "nodemailer": "^6.9.16",
     "react": "19.0.0",
-    "react-dom": "19.0.0"
+    "react-dom": "19.0.0",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

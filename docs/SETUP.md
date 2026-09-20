@@ -97,6 +97,36 @@ npm run build    # production build
 npm run typecheck
 ```
 
+### Images
+
+Photography lives in `public/images`. After adding or replacing any of it,
+run:
+
+```
+npm run images
+```
+
+That caps each source at 1800px and re-encodes it, then writes a blur
+placeholder per image into `src/content/blur.json`. The placeholder is what
+the page paints while the real photograph is still arriving, which is why
+nothing reflows as images land.
+
+Every photograph renders through `src/components/Img.tsx`, which serves AVIF
+or WebP at the size the layout asks for. Exactly one image per page carries
+`priority` — the largest thing above the fold. Everything else stays lazy.
+
+### Performance
+
+`npm run perf` loads each page in a real browser with the cache disabled and
+measures Core Web Vitals against a budget: LCP under 2.5s, CLS under 0.1, FCP
+under 1.8s, and under 900KB transferred. It stops at `load` rather than at
+network idle, because the hero carousel keeps fetching for as long as it
+rotates and that says nothing about how fast the page arrived.
+
+The first run against a cold server is always slower: the image optimiser
+compiles each derivative on first request. Vercel caches those at the edge,
+and `minimumCacheTTL` is set to a year. Measure the second run.
+
 ### The audit
 
 `npm run audit` loads every page in a real browser at 320, 360, 390, 768, 1024

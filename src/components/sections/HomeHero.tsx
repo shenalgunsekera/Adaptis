@@ -13,6 +13,7 @@ import {
 } from "motion/react";
 
 import { Modules, accentVar } from "@/components/brand/Modules";
+import { Img } from "@/components/Img";
 import type { HomeHeroSection } from "@/lib/types";
 import { heroDelay } from "@/lib/boot";
 
@@ -122,13 +123,11 @@ export function HomeHero({ data }: { data: HomeHeroSection }) {
             transition={{ opacity: { duration: reduce ? 0 : 0.9, ease: EASE }, scale: { duration: reduce ? 0 : 7, ease: "linear" } }}
           >
             {showImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Img
                 src={active.image.src}
                 alt={active.image.alt}
-                loading="eager"
-                decoding="async"
-                onError={() => setFailed((f) => ({ ...f, [active.id]: true }))}
+                sizes="100vw"
+                priority={index === 0}
               />
             ) : (
               <div className="hero__nofoto">

@@ -110,10 +110,10 @@
   /* --- Type ----------------------------------------------------------------
      Four faces is the ceiling. Elms Sans is the marketing hero face and falls
      back to Source Serif 4, which is what the reference build shipped. */
-  --font-display: "Elms Sans", "Source Serif 4", Georgia, serif;
-  --font-serif: "Source Serif 4", Georgia, serif;
-  --font-ui: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
+  --font-display: "Elms Sans", var(--font-source-serif), "Source Serif 4", Georgia, serif;
+  --font-serif: var(--font-source-serif), "Source Serif 4", Georgia, serif;
+  --font-ui: var(--font-geist), "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
   --type-hero-home: clamp(32px, 5.4vw, 56px);
   --type-hero-inner: clamp(28px, 4.6vw, 46px);

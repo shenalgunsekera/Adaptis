@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 
 import "@/styles/globals.css";
 import { getSettings } from "@/lib/content";
@@ -6,15 +7,43 @@ import { getSettings } from "@/lib/content";
 /* ============================================================================
    Root layout.
 
-   Fonts load in two requests on purpose. Geist, Geist Mono and Source Serif 4
-   are known-good on Google Fonts. Elms Sans, the brand's marketing hero face,
-   is requested separately: if it is unavailable the display face falls back to
-   Source Serif 4, which is exactly what the reference build shipped, and the
-   other three still load. A single combined request would fail as a whole.
+   Three of the four faces are self-hosted at build time through next/font:
+   the files are served from this origin, so there is no DNS lookup, no
+   connection to a third party and no render-blocking stylesheet before text
+   can paint. `display: swap` means text is readable immediately in the
+   fallback and swaps when the face arrives.
 
-   Both are a draft arrangement. Self-host all four in production; see
-   docs/SETUP.md.
+   Elms Sans is the exception. It is the brand's marketing hero face and may
+   not exist on a public host at all, so it is requested separately and
+   falls back to Source Serif 4 — which is what the reference build shipped.
+   A failed request there cannot take the other three down with it.
+   Self-host it in production; see docs/SETUP.md.
    ========================================================================= */
+
+const geist = Geist({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
+  variable: "--font-geist",
+  fallback: ["system-ui", "Segoe UI", "sans-serif"],
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  display: "swap",
+  variable: "--font-geist-mono",
+  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  display: "swap",
+  variable: "--font-source-serif",
+  fallback: ["Georgia", "serif"],
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -48,7 +77,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="no-js">
+    <html
+      lang="en"
+      className={`no-js ${geist.variable} ${geistMono.variable} ${sourceSerif.variable}`}
+    >
       <head>
         {/* Runs before first paint. The loader curtain is lifted by script,
             so without script it is never drawn in the first place. */}
@@ -57,17 +89,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: "document.documentElement.classList.remove('no-js')",
           }}
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        {/* Elms Sans only; the other three are self-hosted above.
+
+            Loaded without blocking the render: a stylesheet in the head
+            holds first paint until it answers, and this one is a request to
+            a third party for a face that may not exist. It is fetched as a
+            preload and promoted to a stylesheet once it lands, so the page
+            paints immediately in Source Serif 4 and swaps if Elms arrives. */}
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
-        />
-        {/* Requested on its own so an unavailable family cannot take the others down. */}
-        <link
-          rel="stylesheet"
+          rel="preload"
+          as="style"
           href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;500;600&display=swap"
+          // eslint-disable-next-line react/no-unknown-property
+          onLoad={`this.onload=null;this.rel='stylesheet'` as unknown as undefined}
         />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;500;600&display=swap"
+          />
+        </noscript>
       </head>
       <body>{children}</body>
     </html>

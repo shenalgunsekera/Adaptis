@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Modules, accentVar } from "@/components/brand/Modules";
 import { AreaIcon } from "@/components/brand/AreaIcon";
+import { Img } from "@/components/Img";
 import { Reveal, RevealGroup, RevealItem } from "@/components/motion/Reveal";
 import type {
   AreaListSection,
@@ -48,9 +49,8 @@ export function PageHero({ data }: { data: PageHeroSection }) {
         </Reveal>
 
         {hasImage ? (
-          <div className="pagehero__art" style={{ borderRadius: "var(--radius-card)", overflow: "hidden" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={data.image!.src} alt={data.image!.alt} loading="eager" decoding="async" />
+          <div className="pagehero__art pagehero__art--photo">
+            <Img src={data.image!.src} alt={data.image!.alt} sizes="(max-width: 860px) 100vw, 40vw" priority />
           </div>
         ) : data.showModules ? (
           <Reveal kind="scale" delay={0.12} amount={0} className="pagehero__art">
@@ -157,8 +157,7 @@ export function CardGrid({ data }: { data: CardGridSection }) {
               <>
                 {card.image?.src ? (
                   <span className="card__fig">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={card.image.src} alt={card.image.alt} loading="lazy" decoding="async" />
+                    <Img src={card.image.src} alt={card.image.alt} sizes="(max-width: 860px) 100vw, 33vw" />
                   </span>
                 ) : null}
                 {data.accentKeyline && card.accent !== "none" ? (
@@ -442,8 +441,7 @@ export function CaseStudies({ data }: { data: CaseStudiesSection }) {
             <div className="case__top">
               <div className="case__fig">
                 {c.image.src ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.image.src} alt={c.image.alt} loading="lazy" decoding="async" />
+                  <Img src={c.image.src} alt={c.image.alt} sizes="(max-width: 820px) 100vw, 45vw" />
                 ) : (
                   <div style={{ display: "grid", placeItems: "center", height: "100%", padding: "12%" }}>
                     <Modules accent={data.accent} />
@@ -521,16 +519,14 @@ export function ImagePattern({ data }: { data: ImagePatternSection }) {
         <Reveal kind="left" className="ipattern__figs">
           <figure className="ipattern__a">
             {data.imageA.src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.imageA.src} alt={data.imageA.alt} loading="lazy" decoding="async" />
+              <Img src={data.imageA.src} alt={data.imageA.alt} sizes="(max-width: 820px) 60vw, 30vw" />
             ) : (
               <Modules accent={data.accent} />
             )}
           </figure>
           <figure className="ipattern__b">
             {data.imageB.src ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={data.imageB.src} alt={data.imageB.alt} loading="lazy" decoding="async" />
+              <Img src={data.imageB.src} alt={data.imageB.alt} sizes="(max-width: 820px) 55vw, 28vw" />
             ) : (
               <Modules accent={data.accent} />
             )}
@@ -638,8 +634,15 @@ export function FounderNote({ data }: { data: FounderNoteSection }) {
 
             <div className="note__sign">
               {data.signature?.src ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={data.signature.src} alt={data.signature.alt} style={{ maxHeight: 64 }} />
+                <Img
+                  src={data.signature.src}
+                  alt={data.signature.alt}
+                  fill={false}
+                  width={220}
+                  height={64}
+                  sizes="220px"
+                  style={{ height: 64, width: "auto" }}
+                />
               ) : null}
               <span className="note__name">{data.name}</span>
               <span className="note__role">{data.role}</span>
