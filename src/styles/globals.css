@@ -716,12 +716,19 @@ a.card:hover { background: var(--raised); }
    ========================================================================= */
 
 .area {
+  /* Height of the glyph plus its gap: what the right column has to clear
+     for the two columns to start on the same line. */
+  --area-glyph: calc(40px + var(--space-4));
+
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
   gap: clamp(24px, 4vw, 64px);
   padding-block: clamp(34px, 4.4vw, 56px);
   border-top: 1px solid var(--line);
+  align-items: stretch;
 }
+.area > * { display: flex; flex-direction: column; min-width: 0; }
+.area > :last-child { padding-top: var(--area-glyph); }
 .area__name {
   font-family: var(--font-serif);
   font-size: 22px;
@@ -741,9 +748,20 @@ a.card:hover { background: var(--raised); }
 }
 .area__lead { margin-top: var(--space-3); color: var(--text-secondary); font-size: var(--type-body-sm); }
 .area__body { font-size: var(--type-body); line-height: 1.7; }
-.area__foot { margin-top: var(--space-5); display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: center; }
+.area__foot {
+  margin-top: auto;
+  padding-top: var(--space-5);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+}
 
-@media (max-width: 820px) { .area { grid-template-columns: 1fr; gap: var(--space-4); } }
+@media (max-width: 820px) {
+  .area { grid-template-columns: 1fr; gap: var(--space-4); }
+  .area > :last-child { padding-top: 0; }
+  .area__foot { margin-top: var(--space-5); padding-top: 0; }
+}
 
 /* ============================================================================
    Service block — Application and Outcome in two columns
@@ -1279,7 +1297,7 @@ a.card:hover::after { transform: scaleX(1); }
    ========================================================================= */
 
 .card__icon { margin-bottom: var(--space-3); color: var(--text-secondary); }
-.area__icon { margin-bottom: var(--space-4); color: var(--text-secondary); }
+.area__icon { height: 40px; width: auto; margin-bottom: var(--space-4); color: var(--text-secondary); }
 .area__name--icon::before { display: none; }
 
 /* The arrow that marks a tile as a link, drawn rather than set as a glyph. */

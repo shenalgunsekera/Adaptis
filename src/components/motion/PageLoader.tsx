@@ -28,7 +28,9 @@ const DURATION = 1150;
 
 export function PageLoader({ line }: { line: string }) {
   const reduce = useReducedMotion();
-  const [phase, setPhase] = useState<"loading" | "done">("loading");
+  const [phase, setPhase] = useState<"loading" | "done">(() =>
+    boot.done ? "done" : "loading"
+  );
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -38,11 +40,8 @@ export function PageLoader({ line }: { line: string }) {
       return;
     }
 
-    // Only ever play once: a client-side navigation must not re-curtain.
-    if (boot.done) {
-      setPhase("done");
-      return;
-    }
+    // Settled in the initialiser above; nothing to do on a navigation.
+    if (boot.done) return;
 
     document.documentElement.style.overflow = "hidden";
     const start = performance.now();
