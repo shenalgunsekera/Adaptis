@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useReducedMotion, type Variants } from "motion/react";
 
 /* ============================================================================
@@ -29,6 +29,114 @@ const kinds: Record<RevealKind, { hidden: Record<string, number>; shown: Record<
 
 type Tag = "div" | "section" | "article" | "figure" | "li" | "span" | "p";
 
+/* --- Arrival ----------------------------------------------------------------
+   whileInView on its own is not safe for content that starts at zero opacity.
+   A section hydrated after the reader has already flicked past it gets one
+   "not intersecting" report and, because the reveal is once-only, stays
+   invisible for the rest of the visit. Fast scrolling can also coalesce the
+   callbacks that would have caught it on the way through. Either way a band
+   of the page is simply gone, and the reader has no way to get it back.
+
+   Arrival is therefore decided here: an observer for the ordinary case, plus
+   a shared scroll-end sweep that reveals anything now on screen or already
+   scrolled past. One listener serves every pending reveal on the page and
+   detaches as soon as the last one has arrived, so a settled page does no
+   work at all.
+   -------------------------------------------------------------------------- */
+
+const waiting = new Set<() => void>();
+const SWEEP_MS = 120;
+let lastSweep = 0;
+let trailing: ReturnType<typeof setTimeout> | undefined;
+
+function sweep() {
+  lastSweep = performance.now();
+  for (const check of [...waiting]) check();
+}
+
+/* Throttled with a trailing pass rather than debounced. Lenis eases every
+   jump, so it keeps emitting scroll events for as long as it is animating;
+   a debounce would have its timer reset on each one and never fire. */
+function onScroll() {
+  if (performance.now() - lastSweep >= SWEEP_MS) {
+    sweep();
+    return;
+  }
+  if (!trailing) {
+    trailing = setTimeout(() => {
+      trailing = undefined;
+      sweep();
+    }, SWEEP_MS);
+  }
+}
+
+function watch(check: () => void): () => void {
+  if (waiting.size === 0) {
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+  }
+  waiting.add(check);
+
+  return () => {
+    waiting.delete(check);
+    if (waiting.size === 0) {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (trailing) clearTimeout(trailing);
+      trailing = undefined;
+    }
+  };
+}
+
+function useArrived(amount: number) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [arrived, setArrived] = useState(false);
+
+  useEffect(() => {
+    if (arrived) return;
+    const el = ref.current;
+    if (!el) return;
+
+    // The editor can switch section arrivals off for the whole site.
+    if (el.closest('[data-motion="off"]')) {
+      setArrived(true);
+      return;
+    }
+
+    const show = () => setArrived(true);
+
+    const check = () => {
+      const r = el.getBoundingClientRect();
+      if (r.height === 0 && r.width === 0) return; // not laid out yet
+      if (r.bottom <= 0) return show(); // already scrolled past
+
+      // A band taller than the window can never show `amount` of itself, so
+      // the requirement is capped at what the window can actually hold.
+      const visible = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+      const needed = Math.min(r.height * amount, window.innerHeight * 0.9);
+      if (visible > 0 && visible >= needed) show();
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) if (e.isIntersecting) show();
+      },
+      { threshold: Math.min(Math.max(amount, 0), 1), rootMargin: "0px 0px -8% 0px" }
+    );
+    io.observe(el);
+
+    const unwatch = watch(check);
+    check(); // covers hydration that lands after the reader has moved on
+
+    return () => {
+      io.disconnect();
+      unwatch();
+    };
+  }, [amount, arrived]);
+
+  return [ref, arrived] as const;
+}
+
 export function Reveal({
   children,
   kind = "up",
@@ -49,6 +157,7 @@ export function Reveal({
   style?: React.CSSProperties;
 }) {
   const reduce = useReducedMotion();
+  const [ref, arrived] = useArrived(amount);
   const v = kinds[kind];
 
   if (reduce) {
@@ -63,11 +172,11 @@ export function Reveal({
   const M = motion[as] as typeof motion.div;
   return (
     <M
+      ref={ref as React.Ref<HTMLDivElement>}
       className={className}
       style={style}
       initial={v.hidden}
-      whileInView={v.shown}
-      viewport={{ once: true, amount, margin: "0px 0px -8% 0px" }}
+      animate={arrived ? v.shown : v.hidden}
       transition={{ duration, delay, ease: EASE }}
     >
       {children}
@@ -94,6 +203,7 @@ export function RevealGroup({
   style?: React.CSSProperties;
 }) {
   const reduce = useReducedMotion();
+  const [ref, arrived] = useArrived(amount);
   const M = motion[as as Tag] as typeof motion.div;
 
   const container: Variants = {
@@ -103,12 +213,12 @@ export function RevealGroup({
 
   return (
     <M
+      ref={ref as React.Ref<HTMLDivElement>}
       className={className}
       style={style}
       variants={container}
       initial="hidden"
-      whileInView="shown"
-      viewport={{ once: true, amount, margin: "0px 0px -8% 0px" }}
+      animate={arrived ? "shown" : "hidden"}
     >
       {children}
     </M>

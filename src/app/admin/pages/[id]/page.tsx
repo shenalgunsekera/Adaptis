@@ -38,6 +38,8 @@ function blankSection(type: SectionType): Section {
     steps: { type, steps: [], accent: "naples" },
     list: { type, groups: [{ id: "g1", items: [""] }], accent: "naples" },
     caseStudies: { type, cases: [], accent: "cassiopeia", showGapSlot: false },
+    testimonials: { type, title: "", items: [], layout: "grid" },
+    logoStrip: { type, note: "", logos: [] },
     quote: { type, text: "", attribution: "", accent: "naples" },
     band: { type, title: "", support: "", variant: "plain" },
     founderNote: { type, eyebrow: "", title: "", titleTail: "", left: [""], right: [""], name: "", role: "" },

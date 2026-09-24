@@ -234,6 +234,38 @@ export interface ImagePatternSection {
   accent: Accent;
 }
 
+/** Attributed client quotes. The handoff carries four across the site;
+    this collects them where a page wants several together. */
+export interface TestimonialItem {
+  id: string;
+  quote: string;
+  name: string;
+  role: string;
+  organization: string;
+  photo: ImageRef;
+  accent: Accent;
+}
+
+export interface TestimonialsSection {
+  type: "testimonials";
+  eyebrow?: string;
+  title: string;
+  intro?: string;
+  items: TestimonialItem[];
+  /** "single" gives one quote the full measure; "grid" sets them side by side. */
+  layout: "grid" | "single";
+}
+
+/** The client logo strip. Listed in the handoff as a content gap on Who we
+    serve. Clients are named; their buildings are not. */
+export interface LogoStripSection {
+  type: "logoStrip";
+  eyebrow?: string;
+  title?: string;
+  note: string;
+  logos: { id: string; name: string; image: ImageRef; href?: string }[];
+}
+
 export interface QuoteSection {
   type: "quote";
   text: string;
@@ -355,6 +387,8 @@ export type SectionBody =
   | ServiceBlocksSection
   | ServiceIndexSection
   | ImagePatternSection
+  | TestimonialsSection
+  | LogoStripSection
   | StepsSection
   | ListSection
   | CaseStudiesSection
@@ -412,6 +446,31 @@ export interface NavItem {
   children?: NavItem[];
 }
 
+/** Presentation controls that apply site-wide.
+
+    Deliberately not a free colour picker: the palette is fixed by the brand
+    system and every value the site paints has to come from it. What is open
+    here is the things the system leaves to judgement — how heavy the scrim
+    over a photograph is, how fast the carousel moves, whether the lattice
+    shows at all. */
+export interface Appearance {
+  /** Ink over the hero photograph, 0.40–0.90. Below about 0.55 the headline
+      stops clearing AA on the brighter frames. */
+  heroScrimOpacity: number;
+  /** Milliseconds between hero slides. 0 turns autoplay off. */
+  heroAutoplayMs: number;
+  /** The module lattice over the hero and behind the offset figures. */
+  gridTexture: boolean;
+  gridOpacity: number;
+  /** Photographs scale a little when their card is hovered. */
+  imageZoomOnHover: boolean;
+  /** Master switch for the in-view reveals. Reduced motion always wins. */
+  motionEnabled: boolean;
+  /** The Ink curtain on a hard page load. */
+  loaderEnabled: boolean;
+  loaderDurationMs: number;
+}
+
 export interface SiteSettings {
   organization: string;
   legalName: string;
@@ -434,6 +493,7 @@ export interface SiteSettings {
     /** Where form submissions are emailed. Stored in Firestore regardless. */
     notifyEmail: string;
   };
+  appearance: Appearance;
   seo: {
     titleTemplate: string;
     defaultDescription: string;
@@ -456,4 +516,31 @@ export interface ContactSubmission {
   /** Set when the notification email could not be sent. */
   mailError?: string;
   userAgent?: string;
+}
+
+/* --- Engagement ------------------------------------------------------------
+   Counts only. No cookies, no identifiers, no path beyond the ones this site
+   serves — enough to see which pages are read and how many readers go on to
+   make contact, and nothing that identifies a reader.
+   -------------------------------------------------------------------------- */
+
+export interface DayStats {
+  /** YYYY-MM-DD, the document id. */
+  id: string;
+  views: number;
+  /** Views keyed by page slug. */
+  paths: Record<string, number>;
+  /** Contact submissions recorded that day. */
+  enquiries: number;
+}
+
+export interface Engagement {
+  days: DayStats[];
+  totals: {
+    views: number;
+    enquiries: number;
+    /** Enquiries as a percentage of views over the window. */
+    conversion: number;
+  };
+  topPages: { path: string; views: number }[];
 }

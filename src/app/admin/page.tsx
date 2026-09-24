@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AdminShell, FindingCount } from "@/components/admin/Shell";
 import { useAuth } from "@/components/admin/Auth";
 import type { Finding } from "@/lib/brandCheck";
+import type { Engagement } from "@/lib/types";
 
 interface Row {
   slug: string;
@@ -20,20 +21,27 @@ export default function Overview() {
   const { api, user } = useAuth();
   const [rows, setRows] = useState<Row[] | null>(null);
   const [unread, setUnread] = useState<number | null>(null);
+  const [reach, setReach] = useState<Engagement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [seeding, setSeeding] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [pages, inbox] = await Promise.all([
+      const [pages, inbox, engagement] = await Promise.all([
         api<{ pages: Row[] }>("/api/admin/pages"),
         api<{ submissions: { read: boolean }[] }>("/api/admin/submissions").catch(() => ({
           submissions: [],
         })),
+        // Reach is context, not the point of this screen: if it cannot be read
+        // the overview still works and the column simply stays quiet.
+        api<{ engagement: Engagement }>("/api/admin/engagement?days=30").catch(() => ({
+          engagement: null as unknown as Engagement,
+        })),
       ]);
       setRows(pages.pages);
       setUnread(inbox.submissions.filter((s) => !s.read).length);
+      setReach(engagement.engagement);
       setError(null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load.");
@@ -70,6 +78,14 @@ export default function Overview() {
       setSeeding(false);
     }
   }
+
+  /** Views for a page over the last thirty days, keyed the way /api/track
+      stores them: the home page is "/" and the rest carry a leading slash. */
+  const viewsFor = (slug: string): number | null => {
+    if (!reach) return null;
+    const path = slug === "" ? "/" : `/${slug}`;
+    return reach.topPages.find((p) => p.path === path)?.views ?? 0;
+  };
 
   const all = rows?.flatMap((r) => r.findings) ?? [];
   const errors = all.filter((f) => f.severity === "error").length;
@@ -120,6 +136,14 @@ export default function Overview() {
           <div className="adm__stat__v">{unread ?? "—"}</div>
           <div className="adm__stat__l">Unread enquiries</div>
         </div>
+        <div className="adm__stat">
+          <div className="adm__stat__v">
+            {reach ? reach.totals.views.toLocaleString("en-CA") : "—"}
+          </div>
+          <div className="adm__stat__l">
+            <Link href="/admin/engagement">Views, last 30 days</Link>
+          </div>
+        </div>
       </div>
 
       <h2 style={{ marginBottom: 12 }}>Pages</h2>
@@ -137,6 +161,7 @@ export default function Overview() {
               <th>Page</th>
               <th>Address</th>
               <th className="num">Sections</th>
+              <th className="num">Views, 30d</th>
               <th>Checks</th>
               <th>Last edited</th>
             </tr>
@@ -151,6 +176,13 @@ export default function Overview() {
                 </td>
                 <td className="adm__hint">/{r.slug}</td>
                 <td className="num">{r.sections}</td>
+                <td className="num">
+                  {viewsFor(r.slug) === null ? (
+                    <span className="adm__hint">—</span>
+                  ) : (
+                    viewsFor(r.slug)!.toLocaleString("en-CA")
+                  )}
+                </td>
                 <td>
                   <FindingCount findings={r.findings} />
                 </td>

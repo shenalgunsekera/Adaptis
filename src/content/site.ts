@@ -72,6 +72,19 @@ export const siteSeed: SiteSettings = {
     notifyEmail: "connect@adaptis.ca",
   },
 
+  appearance: {
+    // Ink at 0.74 over the hero photography. Measured: Card type clears 7:1
+    // on the brightest of the five frames at this value.
+    heroScrimOpacity: 0.74,
+    heroAutoplayMs: 7000,
+    gridTexture: true,
+    gridOpacity: 0.05,
+    imageZoomOnHover: true,
+    motionEnabled: true,
+    loaderEnabled: true,
+    loaderDurationMs: 1150,
+  },
+
   seo: {
     titleTemplate: "%s · Adaptis",
     defaultDescription:

@@ -123,9 +123,24 @@ under 1.8s, and under 900KB transferred. It stops at `load` rather than at
 network idle, because the hero carousel keeps fetching for as long as it
 rotates and that says nothing about how fast the page arrived.
 
+It then waits for the opening curtain to lift before reading LCP. This matters
+on the home page: while the curtain is up, the largest thing painted is the
+curtain's own one-liner, so a reading taken too early reports about 300ms and
+is measuring the wrong element. What counts is when the headline behind it
+arrives, which is around 1.6s.
+
+That figure is mostly the curtain, and the curtain is editable. The hero runs
+its entrance *behind* it and finishes as it begins to lift, so lengthening the
+curtain in **Appearance** pushes LCP out roughly one-for-one, and shortening
+or disabling it pulls LCP back to about 400ms. `heroDelay` in `src/lib/boot.ts`
+derives its timing from whatever the curtain is set to; nothing needs
+re-tuning by hand.
+
 The first run against a cold server is always slower: the image optimiser
 compiles each derivative on first request. Vercel caches those at the edge,
-and `minimumCacheTTL` is set to a year. Measure the second run.
+and `minimumCacheTTL` is set to a year. Measure the second run. Run it against
+an otherwise idle machine, too — a browser left open from another check is
+enough to push the home page over budget.
 
 ### The audit
 
@@ -168,10 +183,12 @@ and `robots.txt`.
 
 ## 6. How editing works
 
-`/admin` has four screens.
+`/admin` has six screens, grouped in the rail as Site, Presentation and
+Audience.
 
 **Overview** lists the eleven pages with how many brand and accessibility
-checks each is failing, and how many enquiries are unread.
+checks each is failing, how many views each drew over the last thirty days,
+and how many enquiries are unread.
 
 **Pages** opens the section editor. A page is an ordered list of sections; each
 section has a ground (Ink, Card, Page or Halite), a visibility switch, a
@@ -181,7 +198,37 @@ reordered, hidden, added and removed.
 **Navigation and footer** edits what appears on every page, including the call
 to action, which reads the same in all nineteen of its positions.
 
+**Appearance** holds the judgement calls the brand system leaves open: how
+heavy the Ink scrim over the hero photograph is, how long the carousel rests
+on a frame, whether the module lattice shows and at what strength, whether
+photographs lift on hover, whether sections arrive as they scroll into view,
+and whether the opening curtain plays and for how long.
+
+It deliberately has no colour picker. Every colour on the site comes from the
+Rise v2 palette, and which value may sit on which ground is fixed; a free
+picker would let an editor break a contrast pair or put a barred colour where
+it cannot go. Colour is chosen per section, from the accent selector, which
+only offers values the brand actually has.
+
+The scrim slider warns below 55%. That is not a matter of taste: under it the
+headline stops clearing AA against the brighter frames of the carousel.
+
+**Engagement** shows views and enquiries over 7, 30 or 90 days, as a row of
+figures, a hairline bar chart and a most-read table. See section 9.
+
 **Enquiries** is the contact-form inbox.
+
+### Two section types that ship unused
+
+**Testimonials** and **Client logos** are fully wired — schema, renderer,
+admin fields, brand checks — but only the logo strip appears in the shipped
+copy, on Who we serve. No testimonial is seeded, because inventing a quote and
+attributing it to a named person at a named firm is not something to ship by
+default. Add real ones from the section editor: **Add section → Testimonials**.
+
+The logo strip names clients rather than showing marks, which is what the
+anonymization rule asks for anyway. Supplying an image for a client swaps the
+name for the mark automatically.
 
 ### The checks
 
@@ -257,3 +304,36 @@ Carried forward from the handoff, and visible in the admin checks:
 - **One claim to verify before launch.** A proposed Ontario amendment may change
   the 50,000 sq ft EWRB threshold quoted on Building record and on Reporting
   and disclosure.
+
+---
+
+## 9. Engagement
+
+Two numbers are counted, both aggregated per day and neither tied to a person:
+how many times each page was viewed, and how many enquiries the contact form
+produced. `/admin/engagement` reads them over a 7, 30 or 90 day window, and the
+overview carries the thirty-day figure per page.
+
+**What is stored.** One Firestore document per day, at `analytics/YYYY-MM-DD`,
+holding a total view count, a per-path view count, and an enquiry count. All
+three are incremented with `FieldValue.increment(1)`. Nothing else is written.
+
+**What is not stored.** No cookie is set. No identifier, session, fingerprint,
+address or user-agent is recorded against a view. Nothing is sent to a third
+party. There is therefore nothing here to obtain consent for and nothing to
+hand over on request, which is the reason it was built this way rather than by
+dropping in an analytics tag.
+
+**How a view is counted.** `TrackView` fires once per pathname, after paint, on
+an idle callback, via `sendBeacon`. It respects Do Not Track. `/api/track`
+validates the submitted path against the known page list and returns 204 for
+anything it does not recognise, so the counter cannot be filled with invented
+paths. Failures are swallowed: counting must never affect the page being
+counted.
+
+**Reading the chart.** Bars are daily views, scaled to the busiest day in the
+window. A marker under a bar means that day produced at least one enquiry.
+Conversion is enquiries over views across the whole window.
+
+The figures only start once Firestore is connected. Until then the screen says
+so rather than showing zeros as if they were measurements.

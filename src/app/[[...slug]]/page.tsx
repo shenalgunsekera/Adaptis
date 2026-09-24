@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { ScrollProgress, SmoothScroll } from "@/components/motion/SmoothScroll";
 import { PageLoader } from "@/components/motion/PageLoader";
+import { TrackView } from "@/components/motion/TrackView";
 import { SectionRenderer } from "@/components/sections/SectionRenderer";
 import { getAllPages, getPage, getSettings } from "@/lib/content";
 
@@ -63,14 +64,33 @@ export default async function Page({ params }: Props) {
   const [page, settings] = await Promise.all([getPage(path), getSettings()]);
   if (!page) notFound();
 
+  const a = settings.appearance;
+
+  /* Appearance reaches the stylesheet as custom properties rather than as
+     props threaded through every component, so one edit in the admin panel
+     changes the scrim, the lattice and the motion everywhere at once. */
+  const appearanceVars = {
+    ["--hero-scrim" as string]: String(a?.heroScrimOpacity ?? 0.74),
+    ["--grid-opacity" as string]: String(a?.gridTexture === false ? 0 : (a?.gridOpacity ?? 0.05)),
+  } as React.CSSProperties;
+
   return (
-    <>
+    <div style={appearanceVars} data-motion={a?.motionEnabled === false ? "off" : "on"}>
       {/* Visible only to a keyboard tab, never on a pointer device. */}
       <a className="skip" href="#main">
         Skip to content
       </a>
 
-      <PageLoader line={settings.footer.closingLine} />
+      {/* Always rendered, even when switched off: the loader owns the boot
+          timing the hero reads, and with `enabled` false it draws nothing and
+          tells the hero not to wait for a curtain that is not coming. */}
+      <PageLoader
+        line={settings.footer.closingLine}
+        durationMs={a?.loaderDurationMs ?? 1150}
+        enabled={a?.loaderEnabled !== false}
+      />
+
+      <TrackView />
       <SmoothScroll />
       <ScrollProgress />
 
@@ -83,6 +103,6 @@ export default async function Page({ params }: Props) {
       </main>
 
       <Footer settings={settings} />
-    </>
+    </div>
   );
 }

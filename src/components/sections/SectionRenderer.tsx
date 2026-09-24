@@ -20,6 +20,8 @@ import {
   ServiceBlocks,
   ServiceIndex,
   ImagePattern,
+  Testimonials,
+  LogoStrip,
   SplitProse,
   Steps,
 } from "./Blocks";
@@ -70,6 +72,10 @@ export function SectionRenderer({ section }: { section: Section }) {
         return <ServiceIndex data={body} />;
       case "imagePattern":
         return <ImagePattern data={body} />;
+      case "testimonials":
+        return <Testimonials data={body} />;
+      case "logoStrip":
+        return <LogoStrip data={body} />;
       case "steps":
         return <Steps data={body} />;
       case "list":

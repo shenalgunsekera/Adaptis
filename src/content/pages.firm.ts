@@ -157,6 +157,26 @@ export const whoWeServePage: Page = {
       },
     },
     {
+      id: "wws-clients",
+      ground: "card",
+      visible: true,
+      body: {
+        type: "logoStrip",
+        eyebrow: "Clients",
+        title: "Who we have worked with.",
+        note: "We name our clients and not their buildings.",
+        logos: [
+          { id: "cl-forum", name: "Forum Asset Management", image: { src: "", alt: "" } },
+          { id: "cl-metafor", name: "Metafor", image: { src: "", alt: "" } },
+          { id: "cl-triovest", name: "Triovest", image: { src: "", alt: "" } },
+          { id: "cl-northcrest", name: "Northcrest Developments", image: { src: "", alt: "" } },
+          { id: "cl-hines", name: "Hines", image: { src: "", alt: "" } },
+          { id: "cl-peoplefirst", name: "Peoplefirst Developments", image: { src: "", alt: "" } },
+          { id: "cl-king", name: "King County", image: { src: "", alt: "" } },
+        ],
+      },
+    },
+    {
       id: "wws-record",
       ground: "ink",
       visible: true,

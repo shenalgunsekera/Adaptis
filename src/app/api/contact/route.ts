@@ -132,5 +132,16 @@ export async function POST(request: Request) {
     }
   }
 
+  // Recorded alongside the day's views so the conversion rate needs no join.
+  try {
+    const { FieldValue } = await import("firebase-admin/firestore");
+    await database
+      .collection("analytics")
+      .doc(new Date().toISOString().slice(0, 10))
+      .set({ enquiries: FieldValue.increment(1) }, { merge: true });
+  } catch {
+    /* the enquiry is already saved; the counter is not worth failing over */
+  }
+
   return NextResponse.json({ ok: true, id });
 }

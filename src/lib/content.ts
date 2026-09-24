@@ -3,7 +3,7 @@ import "server-only";
 import { unstable_cache, revalidateTag } from "next/cache";
 
 import { tryDb } from "@/lib/firebase/admin";
-import type { Page, SiteSettings, ContactSubmission } from "@/lib/types";
+import type { Page, SiteSettings, ContactSubmission, Engagement, DayStats } from "@/lib/types";
 import { pageSeeds, pageSeedBySlug, siteSeed } from "@/content";
 
 /* ============================================================================
@@ -173,4 +173,66 @@ export async function deleteSubmission(id: string): Promise<void> {
   const database = tryDb();
   if (!database) throw new Error("Firestore is not configured.");
   await database.collection("contactSubmissions").doc(id).delete();
+}
+
+/* --- Engagement ------------------------------------------------------------
+   Counts only, aggregated per day. Nothing here identifies a reader.
+   -------------------------------------------------------------------------- */
+
+export async function getEngagement(days = 30): Promise<Engagement> {
+  const empty: Engagement = {
+    days: [],
+    totals: { views: 0, enquiries: 0, conversion: 0 },
+    topPages: [],
+  };
+
+  const database = tryDb();
+  if (!database) return empty;
+
+  const since = new Date();
+  since.setDate(since.getDate() - (days - 1));
+  const from = since.toISOString().slice(0, 10);
+
+  try {
+    const snap = await database
+      .collection("analytics")
+      .orderBy("__name__")
+      .startAt(from)
+      .get();
+
+    const rows: DayStats[] = snap.docs.map((d) => {
+      const data = d.data() as Partial<DayStats>;
+      return {
+        id: d.id,
+        views: data.views ?? 0,
+        enquiries: data.enquiries ?? 0,
+        paths: (data.paths as Record<string, number>) ?? {},
+      };
+    });
+
+    const views = rows.reduce((n, r) => n + r.views, 0);
+    const enquiries = rows.reduce((n, r) => n + r.enquiries, 0);
+
+    const byPath = new Map<string, number>();
+    for (const r of rows) {
+      for (const [k, v] of Object.entries(r.paths)) {
+        byPath.set(k, (byPath.get(k) ?? 0) + v);
+      }
+    }
+
+    return {
+      days: rows,
+      totals: {
+        views,
+        enquiries,
+        conversion: views ? Number(((enquiries / views) * 100).toFixed(2)) : 0,
+      },
+      topPages: [...byPath.entries()]
+        .map(([path, v]) => ({ path: path === "home" ? "/" : "/" + path.replace(/__/g, "/"), views: v }))
+        .sort((a, b) => b.views - a.views),
+    };
+  } catch (error) {
+    console.error("[engagement] read failed:", error);
+    return empty;
+  }
 }

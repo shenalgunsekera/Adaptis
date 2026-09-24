@@ -24,17 +24,31 @@ import { boot } from "@/lib/boot";
    ========================================================================= */
 
 const EASE_EXPO: [number, number, number, number] = [0.16, 1, 0.3, 1];
-const DURATION = 1150;
 
-export function PageLoader({ line }: { line: string }) {
+
+export function PageLoader({
+  line,
+  durationMs = 1150,
+  enabled = true,
+}: {
+  line: string;
+  durationMs?: number;
+  enabled?: boolean;
+}) {
   const reduce = useReducedMotion();
+
+  // Written during render rather than in an effect: the hero reads it while
+  // it renders, and the loader sits above the hero in the tree, so this is
+  // set before anything asks for it. Idempotent, so a double render is fine.
+  boot.curtainMs = enabled ? durationMs : 0;
+
   const [phase, setPhase] = useState<"loading" | "done">(() =>
-    boot.done ? "done" : "loading"
+    !enabled || boot.done ? "done" : "loading"
   );
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (reduce) {
+    if (reduce || !enabled) {
       boot.done = true;
       setPhase("done");
       return;
@@ -49,7 +63,7 @@ export function PageLoader({ line }: { line: string }) {
     let settle: number | undefined;
 
     const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / DURATION);
+      const t = Math.min(1, (now - start) / durationMs);
       // Ease-out-expo, so the count surges and then settles.
       const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
       setProgress(Math.round(eased * 100));
@@ -69,7 +83,7 @@ export function PageLoader({ line }: { line: string }) {
       if (settle) window.clearTimeout(settle);
       document.documentElement.style.overflow = "";
     };
-  }, [reduce]);
+  }, [reduce, durationMs, enabled]);
 
   useEffect(() => {
     if (phase === "done") document.documentElement.style.overflow = "";

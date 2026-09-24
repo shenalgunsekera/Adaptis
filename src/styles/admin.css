@@ -309,3 +309,47 @@
   font-size: 12px; font-weight: 600;
   flex: 0 0 auto;
 }
+
+/* --- Grouped rail ----------------------------------------------------------- */
+
+.adm__railgroup { display: flex; flex-direction: column; margin-bottom: 16px; }
+.adm__raillabel {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  color: var(--rail-secondary);
+  opacity: 0.6;
+  padding: 0 24px 8px 16px;
+}
+
+/* --- Daily views -------------------------------------------------------------
+   A single series of counts. The product rules prefer whitespace and
+   hairlines to boxes, so the chart is bars on a baseline and nothing else. */
+
+.adm__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 160px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--hairline);
+}
+.adm__bar-wrap { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.adm__bar { width: 100%; background: var(--ink); min-height: 1px; }
+.adm__bar-wrap:hover .adm__bar { background: var(--link); }
+/* A day that produced an enquiry, marked by the square dot the system uses
+   for every other data marker. */
+.adm__bar-dot {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  margin-left: -3px;
+  width: 6px;
+  height: 6px;
+  background: var(--naples);
+}
+
+@media (max-width: 720px) {
+  .adm__railgroup { margin-bottom: 0; }
+  .adm__raillabel { display: none; }
+}

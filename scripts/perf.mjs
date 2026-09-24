@@ -58,8 +58,16 @@ for (const slug of PAGES) {
   });
 
   await page.goto(`${BASE}/${slug}`, { waitUntil: "load", timeout: 45000 });
-  // Let the hero settle so LCP and any shift it causes are counted.
-  await new Promise((r) => setTimeout(r, 1200));
+
+  // The opening curtain covers the hero, so the largest paint has not
+  // happened while it is still up. Waiting a fixed moment after `load` would
+  // report the curtain's own line as LCP and call it fast, which measures the
+  // wrong thing: what matters is when the headline behind it arrives.
+  await page
+    .waitForFunction(() => !document.querySelector(".loader"), { timeout: 15000, polling: 100 })
+    .catch(() => {});
+  // Then let the hero itself settle, so LCP and any shift it causes count.
+  await new Promise((r) => setTimeout(r, 1500));
 
   const m = await page.evaluate(() => {
     const nav = performance.getEntriesByType("navigation")[0];

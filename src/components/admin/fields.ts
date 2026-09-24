@@ -322,6 +322,70 @@ export const SECTION_FIELDS: Record<SectionType, FieldDef[]> = {
     { k: "link", label: "Link", type: "cta" },
   ],
 
+  testimonials: [
+    { k: "eyebrow", label: "Eyebrow", type: "text" },
+    { k: "title", label: "Heading", type: "textarea" },
+    { k: "intro", label: "Introduction", type: "textarea" },
+    {
+      k: "layout",
+      label: "Layout",
+      type: "select",
+      options: [
+        { v: "grid", l: "Grid — several side by side" },
+        { v: "single", l: "Single — one quote at full measure" },
+      ],
+    },
+    {
+      k: "items",
+      label: "Quotes",
+      type: "list",
+      itemLabel: "Quote",
+      titleKey: "name",
+      newItem: () => ({
+        id: rid("tstm"),
+        quote: "",
+        name: "",
+        role: "",
+        organization: "",
+        photo: { src: "", alt: "" },
+        accent: "naples",
+      }),
+      fields: [
+        { k: "quote", label: "Quotation", type: "textarea" },
+        { k: "name", label: "Name", type: "text" },
+        { k: "role", label: "Role", type: "text" },
+        { k: "organization", label: "Organization", type: "text" },
+        imageField("photo", "Portrait"),
+        accentField,
+      ],
+    },
+  ],
+
+  logoStrip: [
+    { k: "eyebrow", label: "Eyebrow", type: "text" },
+    { k: "title", label: "Heading", type: "text" },
+    {
+      k: "note",
+      label: "Note beneath the strip",
+      type: "text",
+      hint: "Clients are named; their buildings are not.",
+    },
+    {
+      k: "logos",
+      label: "Clients",
+      type: "list",
+      itemLabel: "Client",
+      titleKey: "name",
+      hint: "A client with no mark uploaded is simply named, which the anonymization rule is content with.",
+      newItem: () => ({ id: rid("logo"), name: "", image: { src: "", alt: "" }, href: "" }),
+      fields: [
+        { k: "name", label: "Name", type: "text" },
+        imageField("image", "Mark"),
+        { k: "href", label: "Links to (optional)", type: "text" },
+      ],
+    },
+  ],
+
   quote: [
     { k: "text", label: "Quotation", type: "textarea" },
     { k: "attribution", label: "Attribution", type: "text" },
@@ -493,6 +557,8 @@ export const SECTION_LABELS: Record<SectionType, string> = {
   serviceBlocks: "Service blocks, application and outcome",
   serviceIndex: "Service index panel",
   imagePattern: "Image pattern, offset figures and a list",
+  testimonials: "Client testimonials",
+  logoStrip: "Client logos",
   steps: "Numbered principles",
   list: "What we provide",
   caseStudies: "Case studies",

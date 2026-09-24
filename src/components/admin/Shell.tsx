@@ -16,11 +16,28 @@ import type { Finding, Severity } from "@/lib/brandCheck";
    marked by a 4px Cassiopeia edge with a 20 per cent lift at band height.
    ========================================================================= */
 
-const NAV = [
-  { href: "/admin", label: "Overview", exact: true },
-  { href: "/admin/pages", label: "Pages" },
-  { href: "/admin/settings", label: "Navigation and footer" },
-  { href: "/admin/inbox", label: "Enquiries" },
+const NAV: { group: string; items: { href: string; label: string; exact?: boolean }[] }[] = [
+  {
+    group: "Site",
+    items: [
+      { href: "/admin", label: "Overview", exact: true },
+      { href: "/admin/pages", label: "Pages" },
+    ],
+  },
+  {
+    group: "Presentation",
+    items: [
+      { href: "/admin/appearance", label: "Appearance" },
+      { href: "/admin/settings", label: "Navigation and footer" },
+    ],
+  },
+  {
+    group: "Audience",
+    items: [
+      { href: "/admin/inbox", label: "Enquiries" },
+      { href: "/admin/engagement", label: "Engagement" },
+    ],
+  },
 ];
 
 export function AdminShell({
@@ -59,22 +76,31 @@ export function AdminShell({
           </div>
 
           <div className="adm__railnav">
-            {NAV.map((item) => {
-              const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
-              return (
-                <Link key={item.href} href={item.href} className="adm__railitem" data-active={active}>
-                  {item.label}
-                </Link>
-              );
-            })}
-            <a
-              className="adm__railitem"
-              href="/"
-              target="_blank"
-              rel="noreferrer noopener"
-            >
-              View the site
-            </a>
+            {NAV.map((section) => (
+              <div key={section.group} className="adm__railgroup">
+                <p className="adm__raillabel">{section.group}</p>
+                {section.items.map((item) => {
+                  const active = item.exact
+                    ? pathname === item.href
+                    : pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="adm__railitem"
+                      data-active={active}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+            ))}
+            <div className="adm__railgroup">
+              <a className="adm__railitem" href="/" target="_blank" rel="noreferrer noopener">
+                View the site
+              </a>
+            </div>
           </div>
 
           <div className="adm__railfoot">

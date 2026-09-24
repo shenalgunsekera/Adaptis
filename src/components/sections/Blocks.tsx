@@ -23,6 +23,8 @@ import type {
   ImagePatternSection,
   SplitProseSection,
   StepsSection,
+  TestimonialsSection,
+  LogoStripSection,
 } from "@/lib/types";
 
 /* ============================================================================
@@ -558,6 +560,101 @@ export function ImagePattern({ data }: { data: ImagePatternSection }) {
             </Link>
           ) : null}
         </Reveal>
+      </div>
+    </section>
+  );
+}
+
+/* --- Testimonials --------------------------------------------------------- */
+
+export function Testimonials({ data }: { data: TestimonialsSection }) {
+  const single = data.layout === "single";
+
+  return (
+    <section className="section">
+      <div className="wrap">
+        <Reveal kind="up">
+          {data.eyebrow ? <p className="eyebrow">{data.eyebrow}</p> : null}
+          <h2 className="h2 h2--wide" style={{ marginTop: data.eyebrow ? "var(--space-4)" : 0 }}>
+            {data.title}
+          </h2>
+          {data.intro ? (
+            <p className="body secondary" style={{ marginTop: "var(--space-4)" }}>
+              {data.intro}
+            </p>
+          ) : null}
+        </Reveal>
+
+        <RevealGroup
+          className={`tstm${single ? " tstm--single" : ""}`}
+          stagger={0.08}
+          style={{ marginTop: "var(--space-7)" }}
+        >
+          {data.items.map((t) => (
+            <RevealItem
+              key={t.id}
+              className="tstm__item"
+              style={{ ["--accent" as string]: accentVar[t.accent] }}
+            >
+              <blockquote className="tstm__quote">{t.quote}</blockquote>
+              <footer className="tstm__by">
+                {t.photo.src ? (
+                  <span className="tstm__face">
+                    <Img src={t.photo.src} alt={t.photo.alt} sizes="64px" />
+                  </span>
+                ) : null}
+                <span className="tstm__who">
+                  <span className="tstm__name">{t.name}</span>
+                  <span className="tstm__role">
+                    {[t.role, t.organization].filter(Boolean).join(", ")}
+                  </span>
+                </span>
+              </footer>
+            </RevealItem>
+          ))}
+        </RevealGroup>
+      </div>
+    </section>
+  );
+}
+
+/* --- Client logos ----------------------------------------------------------
+   Clients are named. Their buildings are not. */
+
+export function LogoStrip({ data }: { data: LogoStripSection }) {
+  return (
+    <section className="section--tight section">
+      <div className="wrap">
+        <Reveal kind="up">
+          {data.eyebrow ? <p className="eyebrow">{data.eyebrow}</p> : null}
+          {data.title ? (
+            <h2 className="h2 h2--wide" style={{ marginTop: data.eyebrow ? "var(--space-4)" : 0 }}>
+              {data.title}
+            </h2>
+          ) : null}
+        </Reveal>
+
+        <RevealGroup className="logos" stagger={0.05} style={{ marginTop: "var(--space-6)" }}>
+          {data.logos.map((l) => (
+            <RevealItem key={l.id} className="logos__item">
+              {l.image.src ? (
+                <span className="logos__mark">
+                  <Img src={l.image.src} alt={l.image.alt || l.name} sizes="160px" />
+                </span>
+              ) : (
+                /* Until a mark is supplied the client is simply named, which
+                   is what the anonymization rule asks for anyway. */
+                <span className="logos__name">{l.name}</span>
+              )}
+            </RevealItem>
+          ))}
+        </RevealGroup>
+
+        {data.note ? (
+          <p className="tag" style={{ marginTop: "var(--space-5)" }}>
+            {data.note}
+          </p>
+        ) : null}
       </div>
     </section>
   );
