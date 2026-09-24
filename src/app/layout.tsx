@@ -89,27 +89,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: "document.documentElement.classList.remove('no-js')",
           }}
         />
-        {/* Elms Sans only; the other three are self-hosted above.
+        {/* Elms Sans is self-hosted too, declared in globals.css. It used to
+            be fetched from Google Fonts as a preload that a string `onLoad`
+            promoted to a stylesheet — a plain-HTML trick React refuses, so
+            the promotion never ran and the face never loaded. Nothing here
+            reaches a third party now.
 
-            Loaded without blocking the render: a stylesheet in the head
-            holds first paint until it answers, and this one is a request to
-            a third party for a face that may not exist. It is fetched as a
-            preload and promoted to a stylesheet once it lands, so the page
-            paints immediately in Source Serif 4 and swaps if Elms arrives. */}
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+            The preload matters: the home headline is the largest paint on
+            the page and is set in this face, so with `swap` it would paint
+            once in the fallback and again when Elms arrived, and the second
+            paint is the one that counts. Fetching it up front closes that
+            gap. */}
         <link
           rel="preload"
-          as="style"
-          href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;500;600&display=swap"
-          // eslint-disable-next-line react/no-unknown-property
-          onLoad={`this.onload=null;this.rel='stylesheet'` as unknown as undefined}
+          as="font"
+          type="font/woff2"
+          href="/fonts/elms-sans-latin.woff2"
+          crossOrigin="anonymous"
         />
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Elms+Sans:wght@400;500;600&display=swap"
-          />
-        </noscript>
       </head>
       <body>{children}</body>
     </html>

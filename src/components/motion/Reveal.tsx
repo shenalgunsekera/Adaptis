@@ -11,8 +11,8 @@ import { motion, useReducedMotion, type Variants } from "motion/react";
    opacity and a small translation only, so a section arrives rather than
    performs. Distances stay under 30px and durations under a second.
 
-   prefers-reduced-motion is honoured by rendering the content static, not by
-   playing a shorter animation.
+   prefers-reduced-motion is honoured by arriving instantly rather than by
+   playing a shorter animation — same element, no travel, no duration.
    ========================================================================= */
 
 const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
@@ -88,12 +88,12 @@ function watch(check: () => void): () => void {
   };
 }
 
-function useArrived(amount: number) {
+function useArrived(amount: number, skip = false) {
   const ref = useRef<HTMLElement | null>(null);
   const [arrived, setArrived] = useState(false);
 
   useEffect(() => {
-    if (arrived) return;
+    if (arrived || skip) return;
     const el = ref.current;
     if (!el) return;
 
@@ -132,7 +132,7 @@ function useArrived(amount: number) {
       io.disconnect();
       unwatch();
     };
-  }, [amount, arrived]);
+  }, [amount, arrived, skip]);
 
   return [ref, arrived] as const;
 }
@@ -157,27 +157,25 @@ export function Reveal({
   style?: React.CSSProperties;
 }) {
   const reduce = useReducedMotion();
-  const [ref, arrived] = useArrived(amount);
+  const [ref, arrived] = useArrived(amount, reduce === true);
   const v = kinds[kind];
 
-  if (reduce) {
-    const Static = as;
-    return (
-      <Static className={className} style={style}>
-        {children}
-      </Static>
-    );
-  }
-
+  // Reduced motion is honoured by arriving instantly, not by rendering a
+  // different element. Swapping motion.div for a plain div here left the
+  // server's `opacity: 0` inline style behind on hydration — React does not
+  // reconcile it away — so the section stayed invisible for exactly the
+  // readers who asked for less movement.
   const M = motion[as] as typeof motion.div;
+  const shown = reduce || arrived;
+
   return (
     <M
       ref={ref as React.Ref<HTMLDivElement>}
       className={className}
       style={style}
       initial={v.hidden}
-      animate={arrived ? v.shown : v.hidden}
-      transition={{ duration, delay, ease: EASE }}
+      animate={shown ? v.shown : v.hidden}
+      transition={reduce ? { duration: 0 } : { duration, delay, ease: EASE }}
     >
       {children}
     </M>
@@ -203,7 +201,7 @@ export function RevealGroup({
   style?: React.CSSProperties;
 }) {
   const reduce = useReducedMotion();
-  const [ref, arrived] = useArrived(amount);
+  const [ref, arrived] = useArrived(amount, reduce === true);
   const M = motion[as as Tag] as typeof motion.div;
 
   const container: Variants = {
@@ -218,7 +216,7 @@ export function RevealGroup({
       style={style}
       variants={container}
       initial="hidden"
-      animate={arrived ? "shown" : "hidden"}
+      animate={reduce || arrived ? "shown" : "hidden"}
     >
       {children}
     </M>
