@@ -168,13 +168,20 @@ input, textarea, select { font: inherit; color: inherit; }
   background: var(--accent, var(--brand-naples));
 }
 
-/* Elms Sans sets wide word spaces. The negative tracking closes the letters
-   but not the spaces, so the two are balanced explicitly; the rule is inert
-   when the face falls back to Source Serif 4. */
+/* The two heroes are the only places Elms Sans is set, alongside the
+   wordmark, and both take the hero scale now that it is self-hosted:
+   "self-host Elms Sans and apply it to h1 in .hero-home and .hero-light at
+   56/1.05. Nothing else changes" (build notes), which agrees with the design
+   system's --size-hero 3.5rem and --lh-hero 1.05. Everything below a hero —
+   page titles included — stays Source Serif 4 semibold.
+
+   Tracking is left at the values the reference build set, per "nothing else
+   changes". Elms Sans sets wide word spaces, and the negative tracking closes
+   the letters but not the spaces, so the two are balanced explicitly. */
 .h1-home {
   font-family: var(--font-display);
   font-size: var(--type-hero-home);
-  line-height: 1.06;
+  line-height: 1.05;
   letter-spacing: -0.02em;
   word-spacing: -0.08em;
 }
@@ -182,7 +189,7 @@ input, textarea, select { font: inherit; color: inherit; }
 .h1-page {
   font-family: var(--font-display);
   font-size: var(--type-hero-inner);
-  line-height: 1.10;
+  line-height: 1.05;
   letter-spacing: -0.018em;
   word-spacing: -0.08em;
 }

@@ -115,8 +115,13 @@
   --font-ui: var(--font-geist), "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), "Geist Mono", ui-monospace, "SFMono-Regular", monospace;
 
+  /* Both heroes top out at the hero size, 56px: the reference build set the
+     inner hero at 46px only because it was standing in Source Serif 4 for a
+     face it could not load. With Elms Sans self-hosted the handoff asks for
+     "the h1 in both heroes at 56/1.05". The lower bound and the vw rate are
+     left alone, so small screens are unchanged. */
   --type-hero-home: clamp(32px, 5.4vw, 56px);
-  --type-hero-inner: clamp(28px, 4.6vw, 46px);
+  --type-hero-inner: clamp(28px, 4.6vw, 56px);
   --type-h2: clamp(24px, 3.4vw, 34px);
   --type-h3: 21px;
   --type-band: clamp(21px, 3vw, 32px);
