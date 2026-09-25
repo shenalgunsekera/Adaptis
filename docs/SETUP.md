@@ -262,6 +262,26 @@ least one full light section above it. Secondary text on Ink is Hairline
 `#D8D6D4` at 8.77:1. This resolves the brand conflict in section 3 of the
 handoff, which blocked design.
 
+**Elms Sans is self-hosted, and both heroes use it at 56/1.05.** The design
+system says only that Elms Sans is "reserved for the wordmark and marketing
+hero", which on its own would put the inner page hero in Source Serif 4. The
+handoff is more specific and, where the two differ, it is the binding
+document: *"apply it to the h1 in both heroes at 56/1.05"* (section 8, and
+again in the build notes). So `.h1-home` and `.h1-page` both take the display
+face at the hero scale, and everything below a hero — page sub-headings,
+section titles, pull quotes — stays Source Serif 4 semibold.
+
+The inner hero was set at 46px in the reference build only because it was
+standing in Source Serif 4 for a face that build could not load. With the
+real face in place it takes the 56/1.05 both documents ask for, which is also
+the design system's own `--size-hero` and `--lh-hero`. Only the clamp ceiling
+moved; the lower bound and the vw rate are untouched, so phone widths are
+unchanged.
+
+The files live in `public/fonts` under the SIL Open Font License, with the
+notice beside them. One variable woff2 covers weights 400 to 600. The site
+makes no third-party requests at runtime.
+
 **The dark ramp is an extension.** `--ink-recessed`, `--ink-raised` and
 `--ink-hover` in `tokens.css` are not canonical Rise v2 values. They step Ink in
 lightness only, leaving hue and chroma alone, so the ramp reads as one
@@ -291,13 +311,12 @@ redirecting to it permanently.
 Carried forward from the handoff, and visible in the admin checks:
 
 - **Imagery.** No photography exists. Stock needs licensing and uploading.
-- **Elms Sans.** Requested from Google Fonts in its own stylesheet link so that
-  its absence cannot break the other three faces. If it does not load, the
-  display face falls back to Source Serif 4, which is what the reference build
-  shipped. Self-host it in production and it will be picked up with no other
-  change.
 - **Self-hosting the other three faces.** Geist, Geist Mono and Source Serif 4
-  load from Google Fonts, which is correct for a draft only.
+  are fetched from Google Fonts at build time by `next/font` and served from
+  this origin, so nothing reaches a third party at runtime. The build itself
+  still depends on that fetch, which does occasionally fail; the cache under
+  `.next/cache` is what saves the next build, so avoid deleting `.next`
+  wholesale.
 - **The sixth case study**, a buildings-in-operation engagement. The slot is
   built and switched on.
 - **Two team profiles.** Sohani Withanage's details, and one unnamed third.
