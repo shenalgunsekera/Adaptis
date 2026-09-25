@@ -54,12 +54,76 @@ environment variables below. Keep the file out of the repository.
 
 ## 2. Environment
 
-Copy `.env.example` to `.env.local` and fill it in. Two things are easy to get
-wrong:
+Copy `.env.example` to `.env.local` and fill it in.
 
-**The private key has newlines in it.** Paste it wrapped in double quotes with
-the `\n` sequences intact, exactly as it appears in the JSON file. The app
-normalises both that form and real newlines.
+Run `npm run firebase:check` at any point. It reports which credential route
+resolved and then actually reaches Firestore and Auth with it, so you find out
+whether it works rather than whether it looks set.
+
+### How the server authenticates
+
+`FIREBASE_PROJECT_ID` is always needed. Beyond that there are three routes,
+tried in that order, and you fill in exactly one.
+
+**1. A service account key.** Firebase console → Project settings → Service
+accounts → Generate new private key. `FIREBASE_CLIENT_EMAIL` and
+`FIREBASE_PRIVATE_KEY` come out of the JSON file.
+
+The private key has newlines in it. Paste it wrapped in double quotes with the
+`\n` sequences intact, exactly as it appears in the JSON. The app normalises
+both that form and real newlines.
+
+Many organizations **block this outright**, with the Google Cloud org policy
+`constraints/iam.disableServiceAccountKeyCreation`. The reasoning is sound: a
+downloaded key is a long-lived bearer secret that ends up in a chat message or
+a repository. If Generate new private key fails, this route is closed and you
+want one of the next two. Neither involves a key.
+
+**2. Workload identity federation.** The route for production on Vercel.
+
+Vercel signs a short-lived OIDC token for each deployment. Google trades that
+for a federated token, which mints an access token for a service account. No
+key exists at any point, and the service account is the one Firebase already
+created for the project, so nothing new has to be created either.
+
+In Google Cloud → IAM & Admin → Workload Identity Federation:
+
+1. Create a pool, then a provider inside it of type OIDC.
+2. Issuer `https://oidc.vercel.com/<your-vercel-team-slug>`, audience
+   `https://vercel.com/<your-vercel-team-slug>`.
+3. Attribute mapping `google.subject = assertion.sub`. Add an attribute
+   condition restricting it to this project, otherwise any deployment in your
+   Vercel team can assume the identity — for example
+   `assertion.sub.startsWith("owner:<team>:project:<project>")`.
+4. Grant the pool principal `roles/iam.workloadIdentityUser` on the Firebase
+   service account, and give that account Firestore and Firebase Auth access.
+
+Then in Vercel, turn on Secure Backend Access (OIDC) for the project so
+`VERCEL_OIDC_TOKEN` is injected, and set:
+
+```
+GCP_WORKLOAD_IDENTITY_AUDIENCE=//iam.googleapis.com/projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
+GCP_SERVICE_ACCOUNT_EMAIL=firebase-adminsdk-xxxxx@<project>.iam.gserviceaccount.com
+```
+
+This route cannot be exercised from a local machine, because only the
+deployment gets an OIDC token. `npm run firebase:check` says so rather than
+reporting a failure.
+
+**3. Application default credentials.** The quickest way to work locally with
+no key. Nothing goes in the env file; you sign in once:
+
+```
+gcloud auth application-default login
+gcloud auth application-default set-quota-project <project-id>
+```
+
+Your own Google account then authenticates the Admin SDK, so it needs Firestore
+and Firebase Auth access on the project. Cloud Run, Cloud Functions and App
+Engine provide this ambiently, which is worth knowing if Vercel ever stops
+being the host.
+
+### The rest
 
 **`SMTP_PASS` is not the Gmail account password.** Gmail rejects account
 passwords for SMTP. Generate a 16-character app password at

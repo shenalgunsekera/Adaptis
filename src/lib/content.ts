@@ -2,7 +2,7 @@ import "server-only";
 
 import { unstable_cache, revalidateTag } from "next/cache";
 
-import { tryDb } from "@/lib/firebase/admin";
+import { credentialHelp, tryDb } from "@/lib/firebase/admin";
 import type { Page, SiteSettings, ContactSubmission, Engagement, DayStats } from "@/lib/types";
 import { pageSeeds, pageSeedBySlug, siteSeed } from "@/content";
 
@@ -124,7 +124,7 @@ export const getSettings = () =>
 
 export async function savePage(page: Page, editor: string): Promise<void> {
   const database = tryDb();
-  if (!database) throw new Error("Firestore is not configured.");
+  if (!database) throw new Error(credentialHelp());
 
   const payload = clean({
     ...page,
@@ -139,7 +139,7 @@ export async function savePage(page: Page, editor: string): Promise<void> {
 
 export async function saveSettings(settings: SiteSettings): Promise<void> {
   const database = tryDb();
-  if (!database) throw new Error("Firestore is not configured.");
+  if (!database) throw new Error(credentialHelp());
 
   await database.collection("settings").doc("site").set(clean(settings));
   revalidateTag(TAG_SETTINGS);
@@ -165,13 +165,13 @@ export async function updateSubmission(
   patch: Partial<Pick<ContactSubmission, "read" | "archived">>
 ): Promise<void> {
   const database = tryDb();
-  if (!database) throw new Error("Firestore is not configured.");
+  if (!database) throw new Error(credentialHelp());
   await database.collection("contactSubmissions").doc(id).update(patch);
 }
 
 export async function deleteSubmission(id: string): Promise<void> {
   const database = tryDb();
-  if (!database) throw new Error("Firestore is not configured.");
+  if (!database) throw new Error(credentialHelp());
   await database.collection("contactSubmissions").doc(id).delete();
 }
 

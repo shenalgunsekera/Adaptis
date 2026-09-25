@@ -15,7 +15,8 @@
     "compliance": "node scripts/compliance.mjs",
     "spacing": "node scripts/spacing.mjs",
     "images": "node scripts/images.mjs",
-    "perf": "node scripts/perf.mjs"
+    "perf": "node scripts/perf.mjs",
+    "firebase:check": "node scripts/firebase-check.mjs"
   },
   "dependencies": {
     "firebase": "^11.1.0",

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 
 import { requireAdmin } from "@/lib/apiAuth";
-import { tryDb } from "@/lib/firebase/admin";
+import { credentialHelp, tryDb } from "@/lib/firebase/admin";
 import { slugToDocId, TAG_PAGES, TAG_SETTINGS } from "@/lib/content";
 import { pageSeeds, siteSeed } from "@/content";
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   const database = tryDb();
   if (!database) {
-    return NextResponse.json({ error: "Firestore is not configured." }, { status: 503 });
+    return NextResponse.json({ error: credentialHelp() }, { status: 503 });
   }
 
   const url = new URL(request.url);
