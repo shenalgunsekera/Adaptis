@@ -10,3 +10,6 @@ out
 next-env.d.ts
 tsconfig.tsbuildinfo
 .npmrc
+
+# Emulator data, written by npm run emulator
+.emulator/

@@ -240,6 +240,43 @@ Production, Preview and Development. The `NEXT_PUBLIC_` ones are compiled into
 the browser bundle and are public by design; the rest are server-only and are
 never sent to the browser.
 
+### What Vercel needs, and what happens without it
+
+| Variable | If it is missing |
+| --- | --- |
+| `FIREBASE_PROJECT_ID` | Nothing connects; the site serves its seed copy |
+| A credential (see section 2) | Same, and nobody can sign in to the panel |
+| `ADMIN_SESSION_SECRET` | **Everyone is signed out constantly** |
+| `ADMIN_BOOTSTRAP_EMAIL` / `_PASSWORD` | Defaults to `admin@adaptis.ca` / `123456` |
+| `SMTP_*` | Enquiries are saved but no email is sent |
+
+`ADMIN_SESSION_SECRET` deserves the emphasis. Serverless instances do not share
+memory, so without a fixed secret each one signs session cookies with a
+different random value and rejects every cookie issued by any other. The
+symptom is being logged out at random, which reads as a bug in the panel rather
+than as missing configuration. Generate one:
+
+```
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+### The credential is the part that needs thought
+
+Vercel cannot use a `gcloud` login — that is a file on your own machine.
+A deployment has exactly two options, both in section 2:
+
+- **A service account key**, if your organization permits creating one. Paste
+  `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` and it works immediately.
+  Keep the `\n` sequences in the key intact.
+- **Workload identity federation**, if it does not. No key exists at any point.
+  Setup is in section 2, and it can only be tested from a deployment, because
+  the OIDC token it exchanges is injected by Vercel.
+
+Nothing writes to the filesystem at runtime, so the read-only, ephemeral
+filesystem of a serverless function is not a constraint here: content, editor
+accounts and enquiries are all in Firestore, and uploaded images go to Firebase
+Storage.
+
 After the first deploy, set the real domain in the admin panel under
 **Navigation and footer → Site address**. It drives canonical URLs, the sitemap
 and `robots.txt`.
