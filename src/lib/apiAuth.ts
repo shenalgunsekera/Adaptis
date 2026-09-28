@@ -2,7 +2,7 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-import { verifyAdmin, type AdminUser } from "@/lib/firebase/admin";
+import { credentialHelp, isConfigured, verifyAdmin, type AdminUser } from "@/lib/firebase/admin";
 
 /* ============================================================================
    Every admin API route begins here.
@@ -26,6 +26,20 @@ export async function requireAdmin(
     return {
       ok: false,
       response: NextResponse.json({ error: "Not signed in." }, { status: 401 }),
+    };
+  }
+
+  // Checked before the token is verified, because without a credential the
+  // server cannot verify any token and would otherwise blame the account for
+  // its own missing configuration — which sends the reader off hunting
+  // through Firebase Auth and the allowlist for a fault that is not there.
+  if (!isConfigured) {
+    return {
+      ok: false,
+      response: NextResponse.json(
+        { error: `The server has no Google credential, so it cannot verify your sign-in. ${credentialHelp()}` },
+        { status: 503 }
+      ),
     };
   }
 
