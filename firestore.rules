@@ -3,20 +3,32 @@ rules_version = '2';
 /* ============================================================================
    Firestore security rules.
 
-   The public site reads content through the Admin SDK on the server, which
-   bypasses these rules entirely. The browser therefore needs no read access
-   to content at all, and is given none.
+   Every read and write this application performs goes through the Firebase
+   Admin SDK on the server, and the Admin SDK bypasses these rules entirely.
+   These rules therefore govern one thing only: what a browser holding the
+   public API key can do by talking to Firestore directly.
 
-   Writes happen only through the admin API routes, which verify a Firebase ID
-   token against an allowlist held in an environment variable. That allowlist
-   is deliberately not in the database: an attacker who could write to
-   Firestore must not be able to grant themselves editing rights.
+   The answer is nothing. The public site is server-rendered, so the browser
+   never needs to read content; the admin panel posts to this application's
+   own API routes, which check a signed session cookie before touching the
+   database. Nothing in the browser has, or needs, direct database access.
 
-   So the rule here is the strict one — the browser gets nothing.
+   That matters most for `adminUsers`. It holds password hashes. Even scrypt
+   hashes must never be readable by a browser: a readable hash is an offline
+   cracking target, and the rule below is what keeps it off the wire.
+
+   After editing this file: Firebase console, Firestore Database, Rules,
+   paste, Publish.
    ========================================================================= */
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // Editor accounts and password hashes. Read or written only by the
+    // server, through the Admin SDK, after a session check.
+    match /adminUsers/{account} {
+      allow read, write: if false;
+    }
 
     // Site content. Server-rendered through the Admin SDK; no client access.
     match /pages/{page} {
@@ -29,8 +41,16 @@ service cloud.firestore {
 
     // Enquiries. Written by the contact API with the Admin SDK, read in the
     // admin panel through an authenticated API route. Never from a browser:
-    // a client-writable collection here would be an open spam relay.
+    // a client-writable collection here would be an open spam relay, and a
+    // client-readable one would publish everyone who ever made contact.
     match /contactSubmissions/{submission} {
+      allow read, write: if false;
+    }
+
+    // Daily view and enquiry counters. Written by /api/track, which validates
+    // the path against the known page list before incrementing. Client-side
+    // writes would let anyone inflate the figures.
+    match /analytics/{day} {
       allow read, write: if false;
     }
 

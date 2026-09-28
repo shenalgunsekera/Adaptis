@@ -1,16 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 
-import { clientStorage, isClientConfigured } from "@/lib/firebase/client";
 
 /* ============================================================================
    Image field.
 
-   Uploads to Firebase Storage and stores the resulting URL. Alt text sits
-   beside the file and is required whenever there is an image: the brand check
-   refuses a page with an image and no alt text.
+   The file is posted to /api/admin/upload, which writes it to Firebase
+   Storage and returns the address. It goes through the server rather than
+   straight from the browser because editor accounts are this application's
+   own and carry no Firebase identity for the storage rules to check.
+
+   Alt text sits beside the file and is required whenever there is an image:
+   the brand check refuses a page with an image and no alt text.
 
    The credit line is for licensed stock. The hero and case figures ship with
    no photography, and the module grammar stands in until a file is added
@@ -53,32 +55,29 @@ export function ImageField({
       setError(`That file is ${(file.size / 1024 / 1024).toFixed(1)}MB. The limit is 8MB.`);
       return;
     }
-    if (!isClientConfigured) {
-      setError("Firebase Storage is not configured in this environment.");
-      return;
-    }
 
-    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").slice(-80);
-    const path = `site/${Date.now()}-${safe}`;
-    const task = uploadBytesResumable(ref(clientStorage(), path), file, {
-      contentType: file.type,
-      cacheControl: "public, max-age=31536000, immutable",
-    });
+    const body = new FormData();
+    body.append("file", file);
 
     setProgress(0);
-    task.on(
-      "state_changed",
-      (snap) => setProgress(Math.round((snap.bytesTransferred / snap.totalBytes) * 100)),
-      (err) => {
-        setProgress(null);
-        setError(err.message || "The upload failed.");
-      },
-      async () => {
-        const url = await getDownloadURL(task.snapshot.ref);
-        setProgress(null);
-        onChange({ ...img, src: url });
+    try {
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body,
+        credentials: "same-origin",
+      });
+      const payload = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+
+      if (!res.ok || !payload.url) {
+        setError(payload.error ?? "The upload failed.");
+        return;
       }
-    );
+      onChange({ ...img, src: payload.url });
+    } catch {
+      setError("The upload failed.");
+    } finally {
+      setProgress(null);
+    }
   }
 
   return (

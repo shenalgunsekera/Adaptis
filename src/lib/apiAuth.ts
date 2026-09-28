@@ -1,58 +1,72 @@
 import "server-only";
 
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-import { credentialHelp, isConfigured, verifyAdmin, type AdminUser } from "@/lib/firebase/admin";
+import { findById } from "@/lib/auth/admins";
+import { SESSION_COOKIE, readSession } from "@/lib/auth/session";
 
 /* ============================================================================
    Every admin API route begins here.
 
-   The session is a Firebase ID token sent as a bearer credential and verified
-   on the server against the allowlist. Nothing is trusted from the client: not
-   the email, not a role claim, not a cookie the browser set for itself.
+   The session is a signed, HttpOnly cookie this application issued, checked
+   against the account store on every request. Nothing is trusted from the
+   client: not the email, not a role, not the cookie's own contents beyond
+   what the signature covers.
+
+   Editor accounts are this application's own, so nothing here depends on a
+   Google credential. Content still does — Firestore is where pages live —
+   but signing in and managing editors keeps working without one.
    ========================================================================= */
+
+export interface AdminUser {
+  uid: string;
+  email: string;
+  name?: string;
+}
 
 export interface Authed {
   user: AdminUser;
 }
 
 export async function requireAdmin(
-  request: Request
+  _request?: Request
 ): Promise<{ ok: true; user: AdminUser } | { ok: false; response: NextResponse }> {
-  const header = request.headers.get("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  const jar = await cookies();
+  const session = readSession(jar.get(SESSION_COOKIE)?.value);
 
-  if (!token) {
+  if (!session) {
     return {
       ok: false,
       response: NextResponse.json({ error: "Not signed in." }, { status: 401 }),
     };
   }
 
-  // Checked before the token is verified, because without a credential the
-  // server cannot verify any token and would otherwise blame the account for
-  // its own missing configuration — which sends the reader off hunting
-  // through Firebase Auth and the allowlist for a fault that is not there.
-  if (!isConfigured) {
+  // Re-read the account rather than trusting the cookie's copy, so removing
+  // an editor takes effect at once instead of at the end of their session.
+  let account;
+  try {
+    account = await findById(session.sub);
+  } catch (error) {
+    console.error("[auth] could not read editor accounts:", error);
     return {
       ok: false,
       response: NextResponse.json(
-        { error: `The server has no Google credential, so it cannot verify your sign-in. ${credentialHelp()}` },
-        { status: 503 }
+        { error: "Editor accounts could not be read. See the server log." },
+        { status: 500 }
       ),
     };
   }
 
-  const user = await verifyAdmin(token);
-  if (!user) {
+  if (!account) {
     return {
       ok: false,
-      response: NextResponse.json(
-        { error: "This account is not permitted to edit the site." },
-        { status: 403 }
-      ),
+      response: NextResponse.json({ error: "This account no longer exists." }, { status: 403 }),
     };
   }
 
-  return { ok: true, user };
+  return {
+    ok: true,
+    user: { uid: account.id, email: account.email, name: account.name },
+  };
 }

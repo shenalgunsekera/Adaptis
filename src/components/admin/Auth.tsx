@@ -9,34 +9,36 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  browserLocalPersistence,
-  onAuthStateChanged,
-  setPersistence,
-  signInWithEmailAndPassword,
-  signOut,
-  type User,
-} from "firebase/auth";
 
-import { clientAuth, isClientConfigured } from "@/lib/firebase/client";
 import { AdaptisLockup } from "@/components/brand/Lockup";
 
 /* ============================================================================
    Admin session.
 
-   Sign-in is Firebase email and password. The resulting ID token is attached
-   to every admin request and verified on the server against the allowlist, so
-   the client holds no authority of its own: signing in as a non-allowlisted
-   account succeeds at Firebase and is then refused by every API route.
+   Email and password held by this application. Signing in sets a signed,
+   HttpOnly cookie that the browser cannot read and that every admin route
+   checks against the account store, so the client holds no authority of its
+   own and a tampered cookie fails its signature.
 
-   Tokens are short lived and refreshed by the SDK; api() always asks for a
-   current one rather than caching a stale string.
+   No identity provider is involved, which is what lets the panel work without
+   a Google credential. Pages still live in Firestore, so editing them needs
+   one; signing in and managing editors does not.
    ========================================================================= */
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
 interface AuthValue {
-  user: User | null;
+  user: AdminUser | null;
   loading: boolean;
   error: string | null;
+  /** True while the signed-in account still has the password it shipped with. */
+  weakPassword: boolean;
+  sessionSecretSet: boolean;
+  refresh: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOutNow: () => Promise<void>;
   api: <T = unknown>(path: string, init?: RequestInit) => Promise<T>;
@@ -60,68 +62,83 @@ export class ApiError extends Error {
   }
 }
 
+interface MeResponse {
+  user: AdminUser | null;
+  weakPassword?: boolean;
+  sessionSecretSet?: boolean;
+}
+
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [weakPassword, setWeakPassword] = useState(false);
+  const [sessionSecretSet, setSessionSecretSet] = useState(true);
+
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/auth/me", { cache: "no-store" });
+      const data = (await res.json()) as MeResponse;
+      setUser(data.user);
+      setWeakPassword(Boolean(data.weakPassword));
+      setSessionSecretSet(data.sessionSecretSet !== false);
+    } catch {
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!isClientConfigured) {
-      setLoading(false);
-      setError(
-        "Firebase is not configured in this environment. Set the NEXT_PUBLIC_FIREBASE_* variables and reload."
-      );
-      return;
-    }
+    void refresh();
+  }, [refresh]);
 
-    const auth = clientAuth();
-    setPersistence(auth, browserLocalPersistence).catch(() => undefined);
+  const signIn = useCallback(
+    async (email: string, password: string) => {
+      setError(null);
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
-    return onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-  }, []);
+      if (!res.ok) {
+        const message =
+          typeof payload.error === "string" ? payload.error : "We could not sign you in.";
+        setError(message);
+        throw new ApiError(message, res.status, payload);
+      }
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    setError(null);
-    try {
-      await signInWithEmailAndPassword(clientAuth(), email, password);
-    } catch (e) {
-      const code = (e as { code?: string }).code ?? "";
-      setError(
-        code === "auth/invalid-credential" ||
-          code === "auth/wrong-password" ||
-          code === "auth/user-not-found"
-          ? "That email and password do not match an account."
-          : code === "auth/too-many-requests"
-            ? "Too many attempts. Wait a moment and try again."
-            : "We could not sign you in. Please try again."
-      );
-      throw e;
-    }
-  }, []);
+      await refresh();
+    },
+    [refresh]
+  );
 
   const signOutNow = useCallback(async () => {
-    await signOut(clientAuth());
+    await fetch("/api/admin/auth/logout", { method: "POST" }).catch(() => undefined);
+    setUser(null);
   }, []);
 
   const api = useCallback(
     async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
-      const current = clientAuth().currentUser;
-      if (!current) throw new ApiError("Not signed in.", 401, null);
-
-      const token = await current.getIdToken();
       const headers = new Headers(init.headers);
-      headers.set("Authorization", `Bearer ${token}`);
       if (init.body && !headers.has("Content-Type")) {
         headers.set("Content-Type", "application/json");
       }
 
-      const res = await fetch(path, { ...init, headers, cache: "no-store" });
+      // The session travels as a cookie; "same-origin" is the default but is
+      // stated here so it cannot be lost to a future default change.
+      const res = await fetch(path, {
+        ...init,
+        headers,
+        cache: "no-store",
+        credentials: "same-origin",
+      });
       const payload = (await res.json().catch(() => ({}))) as Record<string, unknown>;
 
       if (!res.ok) {
+        if (res.status === 401) setUser(null);
         throw new ApiError(
           typeof payload.error === "string" ? payload.error : `Request failed (${res.status}).`,
           res.status,
@@ -134,8 +151,18 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ user, loading, error, signIn, signOutNow, api }),
-    [user, loading, error, signIn, signOutNow, api]
+    () => ({
+      user,
+      loading,
+      error,
+      weakPassword,
+      sessionSecretSet,
+      refresh,
+      signIn,
+      signOutNow,
+      api,
+    }),
+    [user, loading, error, weakPassword, sessionSecretSet, refresh, signIn, signOutNow, api]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
@@ -159,7 +186,7 @@ export function SignIn() {
 
           <h1>Sign in to edit the site.</h1>
           <p className="adm__sub" style={{ marginBottom: 24 }}>
-            Your account must be on the editor allowlist.
+            Editor accounts are managed inside the panel.
           </p>
 
           {error ? <div className="adm__notice adm__notice--error">{error}</div> : null}
@@ -207,7 +234,12 @@ export function SignIn() {
               />
             </div>
 
-            <button type="submit" className="adm__btn adm__btn--primary" disabled={busy} style={{ width: "100%" }}>
+            <button
+              type="submit"
+              className="adm__btn adm__btn--primary"
+              disabled={busy}
+              style={{ width: "100%" }}
+            >
               {busy ? "Signing in…" : "Sign in"}
             </button>
           </form>

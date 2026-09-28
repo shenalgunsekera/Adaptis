@@ -42,9 +42,7 @@ access to the database.
 → Publish. Site imagery is public to read, writable only by a signed-in
 account, and capped at 8MB and image types.
 
-**Authentication.** Build → Authentication → Get started → Email/Password →
-Enable. Then Users → Add user, and create an account for each editor. These are
-the people who will sign in at `/admin`.
+**Authentication is not used.** Editor accounts are this application's own — email and password, hashed with scrypt, stored in Firestore under `adminUsers` — so there is nothing to enable here and no Firebase Auth user to create. See section 6.
 
 **A service account.** Project settings → Service accounts → Generate new
 private key. This downloads a JSON file. Three values out of it become
@@ -131,10 +129,13 @@ passwords for SMTP. Generate a 16-character app password at
 two-step verification to be on first. It can be revoked from that same page
 without changing the account password.
 
-`ADMIN_EMAILS` is the list of people permitted to edit. An account must exist in
-Firebase Auth *and* be on this list. It is held in the environment rather than
-in the database deliberately: someone who reached Firestore must not be able to
-add themselves as an editor.
+**`ADMIN_SESSION_SECRET` signs the session cookie.** Without one, a random secret is generated per boot, which is safe but signs everyone out on each restart and on every new serverless instance. Set it in production:
+
+```
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**`ADMIN_BOOTSTRAP_EMAIL` and `ADMIN_BOOTSTRAP_PASSWORD`** are the first account, created automatically the first time `adminUsers` is empty. Change the password from the Editors screen as soon as you are in; the panel keeps saying so until you do.
 
 ---
 
@@ -281,6 +282,21 @@ headline stops clearing AA against the brighter frames of the carousel.
 figures, a hairline bar chart and a most-read table. See section 9.
 
 **Enquiries** is the contact-form inbox.
+
+**Editors** is who can sign in. Anyone signed in may add, rename, re-password
+or remove another editor; there is no second tier of owner, because everyone
+here can already rewrite every page on the site and a boundary between them
+would be decoration.
+
+There is no email on the way out, so there is no password-reset link to send.
+An editor who is locked out is given a new password by a colleague, which is
+why changing someone else's password is allowed. Passwords are hashed with
+scrypt and never leave the server, so a forgotten one cannot be looked up —
+only replaced.
+
+The session is a signed, HttpOnly cookie, good for eight hours. Removing an
+editor takes effect on their next request rather than at the end of their
+session: every request re-reads the account.
 
 ### Two section types that ship unused
 

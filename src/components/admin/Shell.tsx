@@ -38,6 +38,10 @@ const NAV: { group: string; items: { href: string; label: string; exact?: boolea
       { href: "/admin/engagement", label: "Engagement" },
     ],
   },
+  {
+    group: "Access",
+    items: [{ href: "/admin/editors", label: "Editors" }],
+  },
 ];
 
 export function AdminShell({

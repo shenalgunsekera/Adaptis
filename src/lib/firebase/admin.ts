@@ -186,10 +186,20 @@ function hasApplicationDefault(): boolean {
 
 /* --- Resolution ------------------------------------------------------------ */
 
-export type CredentialMode = "key" | "workload-identity" | "application-default" | "none";
+export type CredentialMode =
+  | "emulator"
+  | "key"
+  | "workload-identity"
+  | "application-default"
+  | "none";
+
+/** The local Firestore emulator authenticates nothing, so it needs no
+    credential. Checked first: when it is running, it is what you meant. */
+const usingEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
 function resolveMode(): CredentialMode {
   if (!projectId) return "none";
+  if (usingEmulator) return "emulator";
   if (clientEmail && privateKey) return "key";
   if (wifAudience && wifServiceAccount) return "workload-identity";
   if (hasApplicationDefault()) return "application-default";
@@ -221,6 +231,13 @@ function app(): App {
   const existing = getApps().find((a) => a.name === APP_NAME);
   if (existing) {
     cachedApp = existing;
+    return cachedApp;
+  }
+
+  // The emulator refuses nothing and verifies nothing, so asking for a
+  // credential here would fail for no purpose.
+  if (credentialMode === "emulator") {
+    cachedApp = initializeApp({ projectId: projectId! }, APP_NAME);
     return cachedApp;
   }
 
@@ -265,54 +282,6 @@ export function tryDb(): Firestore | null {
   if (!isConfigured) return null;
   try {
     return db();
-  } catch {
-    return null;
-  }
-}
-
-/* --- Authorisation --------------------------------------------------------
-   An account may edit the site only if its verified email is on the
-   allowlist. The allowlist lives in an environment variable rather than in
-   Firestore, so an attacker who reaches the database cannot grant themselves
-   access by writing a document.
-   ------------------------------------------------------------------------ */
-
-export function adminEmails(): string[] {
-  return (process.env.ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean);
-}
-
-export function isAdminEmail(email: string | undefined | null): boolean {
-  if (!email) return false;
-  const list = adminEmails();
-  if (list.length === 0) return false;
-  return list.includes(email.toLowerCase());
-}
-
-export interface AdminUser {
-  uid: string;
-  email: string;
-  name?: string;
-}
-
-/**
- * Verifies a Firebase ID token and checks it against the allowlist.
- * Returns null for anything that is not a currently valid admin session.
- */
-export async function verifyAdmin(idToken: string): Promise<AdminUser | null> {
-  if (!isConfigured) return null;
-  try {
-    const decoded = await auth().verifyIdToken(idToken, true);
-    if (!decoded.email || !isAdminEmail(decoded.email)) return null;
-    // An unverified address must not be able to claim an allowlisted email.
-    if (decoded.email_verified === false) return null;
-    return {
-      uid: decoded.uid,
-      email: decoded.email,
-      name: typeof decoded.name === "string" ? decoded.name : undefined,
-    };
   } catch {
     return null;
   }
