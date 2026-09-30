@@ -19,7 +19,8 @@
     "firebase:check": "node scripts/firebase-check.mjs",
     "emulator": "firebase emulators:start --only firestore --project adaptis-db --import .emulator --export-on-exit .emulator",
     "dev:local": "node scripts/dev-local.mjs dev",
-    "start:local": "node scripts/dev-local.mjs start"
+    "start:local": "node scripts/dev-local.mjs start",
+    "adc:export": "node scripts/adc-to-vercel.mjs"
   },
   "dependencies": {
     "firebase": "^11.1.0",

@@ -80,7 +80,15 @@ console.log(
 );
 console.log(subject ? ok("an OIDC token is present") : no("no OIDC token (only Vercel injects one)"));
 
-console.log("\n3. Application default credentials (no key)");
+const userCreds = process.env.GOOGLE_USER_CREDENTIALS;
+console.log("\n3. A signed-in user's own credentials (no key, stopgap)");
+console.log(
+  userCreds
+    ? ok("GOOGLE_USER_CREDENTIALS set — replace this with route 1 or 2 before it becomes permanent")
+    : no("GOOGLE_USER_CREDENTIALS unset")
+);
+
+console.log("\n4. Application default credentials (no key)");
 console.log(
   hasAdcEnv ? ok("GOOGLE_APPLICATION_CREDENTIALS set") : no("GOOGLE_APPLICATION_CREDENTIALS unset")
 );
@@ -90,6 +98,7 @@ let mode = "none";
 if (projectId) {
   if (hasEmail && hasKey) mode = "key";
   else if (wifAudience && wifAccount) mode = "workload-identity";
+  else if (userCreds) mode = "user-refresh-token";
   else if (hasAdcEnv || hasGcloud) mode = "application-default";
 }
 
@@ -98,12 +107,13 @@ console.log(`\nResolved route: ${mode}`);
 if (mode === "none") {
   console.log(
     "\nNothing to authenticate with, so the site serves its seed copy and the admin\n" +
-      "panel cannot save. Pick one of the three above.\n\n" +
+      "panel cannot save. Pick one of the four above.\n\n" +
       "If your organization blocks service account keys, route 1 is closed to you.\n" +
-      "Route 3 is the quickest way to work locally:\n\n" +
+      "Route 4 is the quickest way to work locally:\n\n" +
       "    gcloud auth application-default login\n" +
       `    gcloud auth application-default set-quota-project ${projectId ?? "<project-id>"}\n\n` +
-      "Route 2 is the one for production on Vercel. See docs/SETUP.md section 2.\n"
+      "For a deployment: route 2 is the durable answer. Route 3 is the stopgap —\n" +
+      "sign in as above, then `npm run adc:export`. See docs/SETUP.md section 2.\n"
   );
   process.exit(1);
 }

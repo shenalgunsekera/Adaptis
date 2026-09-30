@@ -9,6 +9,7 @@ import {
   getApp,
   getApps,
   initializeApp,
+  refreshToken,
   type App,
   type Credential,
 } from "firebase-admin/app";
@@ -160,7 +161,56 @@ function federatedCredential(audience: string, serviceAccount: string): Credenti
   };
 }
 
-/* --- 3. Application default credentials ------------------------------------
+/* --- 3. A user's own refresh token ------------------------------------------
+   What `gcloud auth application-default login` leaves on disk, carried to a
+   host that has no disk of its own. The file it writes is a refresh token for
+   the person who signed in, and firebase-admin will accept it directly, so
+   pasting that file into GOOGLE_USER_CREDENTIALS does make a deployment work
+   with no service account key.
+
+   It is a stopgap, and the reasons are worth stating rather than discovering:
+
+     It is a person, not a service. The token carries that account's Google
+     access, not a narrowed-down slice of it. A service account key — the
+     thing the org policy forbids — would actually be the smaller grant.
+
+     It expires, unpredictably. Changing the password revokes it; so does a
+     Workspace session-length policy, an admin revoking app access, or long
+     disuse. The site then stops being able to reach Firestore, with no
+     warning, at a moment nobody chose.
+
+     Google documents these credentials as being for local development. Some
+     APIs warn on them and some refuse.
+
+   So: fine for getting a deployment up this week, not what should still be
+   there next quarter. Workload identity above is the version of this idea
+   that does not expire and is not tied to a person.
+   -------------------------------------------------------------------------- */
+
+const userCredentialsJson = process.env.GOOGLE_USER_CREDENTIALS;
+
+function parseUserCredentials(): { client_id: string; client_secret: string; refresh_token: string } | null {
+  if (!userCredentialsJson) return null;
+  try {
+    const parsed = JSON.parse(userCredentialsJson) as Record<string, unknown>;
+    if (
+      typeof parsed.client_id === "string" &&
+      typeof parsed.client_secret === "string" &&
+      typeof parsed.refresh_token === "string"
+    ) {
+      return parsed as { client_id: string; client_secret: string; refresh_token: string };
+    }
+    return null;
+  } catch {
+    // Never log the value: it is a live credential.
+    console.error("[firebase] GOOGLE_USER_CREDENTIALS is not valid JSON.");
+    return null;
+  }
+}
+
+const userCredentials = parseUserCredentials();
+
+/* --- 4. Application default credentials ------------------------------------
    What `gcloud auth application-default login` leaves behind, and what Cloud
    Run, App Engine and Compute Engine provide ambiently. This is the easiest
    way to develop locally with no key: sign in once with your own Google
@@ -190,6 +240,7 @@ export type CredentialMode =
   | "emulator"
   | "key"
   | "workload-identity"
+  | "user-refresh-token"
   | "application-default"
   | "none";
 
@@ -202,6 +253,7 @@ function resolveMode(): CredentialMode {
   if (usingEmulator) return "emulator";
   if (clientEmail && privateKey) return "key";
   if (wifAudience && wifServiceAccount) return "workload-identity";
+  if (userCredentials) return "user-refresh-token";
   if (hasApplicationDefault()) return "application-default";
   return "none";
 }
@@ -217,7 +269,8 @@ export function credentialHelp(): string {
     "No Google credential was found. Use any one of: a service account key " +
     "(FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY); workload identity federation " +
     "(GCP_WORKLOAD_IDENTITY_AUDIENCE and GCP_SERVICE_ACCOUNT_EMAIL), which needs no key and is " +
-    "the route when your organization blocks key creation; or application default credentials, " +
+    "the route when your organization blocks key creation; a signed-in user’s own credentials " +
+    "(GOOGLE_USER_CREDENTIALS, a stopgap); or application default credentials, " +
     "locally via `gcloud auth application-default login`. See docs/SETUP.md section 2."
   );
 }
@@ -248,6 +301,9 @@ function app(): App {
       break;
     case "workload-identity":
       credential = federatedCredential(wifAudience!, wifServiceAccount!);
+      break;
+    case "user-refresh-token":
+      credential = refreshToken(userCredentials!);
       break;
     default:
       credential = applicationDefault();

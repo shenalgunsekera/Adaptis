@@ -108,7 +108,30 @@ This route cannot be exercised from a local machine, because only the
 deployment gets an OIDC token. `npm run firebase:check` says so rather than
 reporting a failure.
 
-**3. Application default credentials.** The quickest way to work locally with
+**3. A signed-in user's own credentials.** A stopgap for a deployment, and
+the answer to "can the gcloud route be carried to Vercel": yes, it can.
+
+`gcloud auth application-default login` writes a refresh token for whoever
+signed in, and `firebase-admin` accepts that file directly. `npm run adc:export`
+reads it and prints the one-line value to paste into `GOOGLE_USER_CREDENTIALS`
+in Vercel. It works, immediately, with no organization involvement.
+
+What you are trading away, which is worth knowing before rather than after:
+
+- **It is a person, not a service.** The token carries that account's Google
+  access, not a narrowed slice of it. The service account key the policy
+  forbids would be the *smaller* grant of the two.
+- **It expires without warning.** A password change revokes it; so does a
+  Workspace session policy, an admin revoking application access, or long
+  disuse. The site then loses Firestore at a moment nobody chose, and the
+  symptom is the admin panel refusing sign-ins.
+- **Google documents these credentials as being for local development.**
+
+So: reasonable for getting a deployment up this week, not for leaving in
+place. Route 2 is the same idea done durably — short-lived tokens, tied to a
+workload rather than a person, nothing to expire.
+
+**4. Application default credentials.** The quickest way to work locally with
 no key. Nothing goes in the env file; you sign in once:
 
 ```
@@ -263,7 +286,7 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### The credential is the part that needs thought
 
 Vercel cannot use a `gcloud` login — that is a file on your own machine.
-A deployment has exactly two options, both in section 2:
+A deployment has three options, all in section 2:
 
 - **A service account key**, if your organization permits creating one. Paste
   `FIREBASE_CLIENT_EMAIL` and `FIREBASE_PRIVATE_KEY` and it works immediately.
@@ -271,6 +294,9 @@ A deployment has exactly two options, both in section 2:
 - **Workload identity federation**, if it does not. No key exists at any point.
   Setup is in section 2, and it can only be tested from a deployment, because
   the OIDC token it exchanges is injected by Vercel.
+- **A signed-in user's refresh token** (`GOOGLE_USER_CREDENTIALS`, via
+  `npm run adc:export`) as a stopgap. It works today and expires unpredictably;
+  section 2 sets out what that costs.
 
 Nothing writes to the filesystem at runtime, so the read-only, ephemeral
 filesystem of a serverless function is not a constraint here: content, editor
