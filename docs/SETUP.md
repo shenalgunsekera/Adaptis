@@ -113,7 +113,8 @@ the answer to "can the gcloud route be carried to Vercel": yes, it can.
 
 `gcloud auth application-default login` writes a refresh token for whoever
 signed in, and `firebase-admin` accepts that file directly. `npm run adc:export`
-reads it and prints the one-line value to paste into `GOOGLE_USER_CREDENTIALS`
+reads it and prints the one-line value to paste into `GOOGLE_USER_CREDENTIALS` —
+that single line only, not the surrounding explanation
 in Vercel. It works, immediately, with no organization involvement.
 
 What you are trading away, which is worth knowing before rather than after:

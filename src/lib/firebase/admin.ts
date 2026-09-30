@@ -1,6 +1,7 @@
 import "server-only";
 
-import { existsSync } from "node:fs";
+import { existsSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import {
@@ -9,7 +10,6 @@ import {
   getApp,
   getApps,
   initializeApp,
-  refreshToken,
   type App,
   type Credential,
 } from "firebase-admin/app";
@@ -265,6 +265,37 @@ export const isConfigured = credentialMode !== "none";
     the next thing read rather than something to go looking for. */
 export function credentialHelp(): string {
   if (!projectId) return "FIREBASE_PROJECT_ID is not set.";
+
+  /* A variable that is present but unusable is a different problem from one
+     that was never set, and it is the one worth naming: "no credential
+     found" sends someone to check whether they set it, which they did.
+     Reported by shape only — never a value, and never a length that would
+     narrow a guess. */
+  const halfSet: string[] = [];
+  if (Boolean(clientEmail) !== Boolean(privateKey)) {
+    halfSet.push(
+      clientEmail
+        ? "FIREBASE_CLIENT_EMAIL is set but FIREBASE_PRIVATE_KEY is not (or is still the placeholder)"
+        : "FIREBASE_PRIVATE_KEY is set but FIREBASE_CLIENT_EMAIL is not (or is still the placeholder)"
+    );
+  }
+  if (Boolean(wifAudience) !== Boolean(wifServiceAccount)) {
+    halfSet.push(
+      "workload identity needs both GCP_WORKLOAD_IDENTITY_AUDIENCE and GCP_SERVICE_ACCOUNT_EMAIL; only one is set"
+    );
+  }
+  if (userCredentialsJson && !userCredentials) {
+    halfSet.push(
+      "GOOGLE_USER_CREDENTIALS is set but could not be read as the JSON object " +
+        '`gcloud auth application-default login` writes — it must be that one line only, ' +
+        "starting { and ending }, with client_id, client_secret and refresh_token"
+    );
+  }
+
+  if (halfSet.length > 0) {
+    return `A credential is configured but not usable: ${halfSet.join("; ")}. See docs/SETUP.md section 2.`;
+  }
+
   return (
     "No Google credential was found. Use any one of: a service account key " +
     "(FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY); workload identity federation " +
@@ -302,9 +333,29 @@ function app(): App {
     case "workload-identity":
       credential = federatedCredential(wifAudience!, wifServiceAccount!);
       break;
-    case "user-refresh-token":
-      credential = refreshToken(userCredentials!);
+    case "user-refresh-token": {
+      /* Not `refreshToken(...)`, though that is the obvious call and it does
+         construct. The Admin SDK's Firestore client then refuses it:
+
+           Failed to initialize Google Cloud Firestore client with the
+           available credentials. Must initialize the SDK with a certificate
+           credential or application default credentials to use Cloud
+           Firestore API.
+
+         Auth accepts a refresh-token credential; Firestore does not. But
+         application default credentials are this same JSON, read from a
+         file — that is all `gcloud auth application-default login` leaves
+         behind — so writing it to one and letting the SDK discover it the
+         usual way is accepted where the direct call is not.
+
+         The file is per-instance and ephemeral on a serverless host, and
+         0600 so it is not readable by anything else sharing the machine. */
+      const file = join(tmpdir(), "adaptis-adc.json");
+      writeFileSync(file, userCredentialsJson!, { mode: 0o600 });
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = file;
+      credential = applicationDefault();
       break;
+    }
     default:
       credential = applicationDefault();
   }
