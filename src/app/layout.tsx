@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 
 import "@/styles/globals.css";
 import { getSettings } from "@/lib/content";
@@ -7,43 +6,18 @@ import { getSettings } from "@/lib/content";
 /* ============================================================================
    Root layout.
 
-   Three of the four faces are self-hosted at build time through next/font:
-   the files are served from this origin, so there is no DNS lookup, no
-   connection to a third party and no render-blocking stylesheet before text
-   can paint. `display: swap` means text is readable immediately in the
-   fallback and swaps when the face arrives.
+   All four faces are declared in globals.css and served from public/fonts on
+   this origin. Nothing is fetched from Google at build time or at run time.
 
-   Elms Sans is the exception. It is the brand's marketing hero face and may
-   not exist on a public host at all, so it is requested separately and
-   falls back to Source Serif 4 — which is what the reference build shipped.
-   A failed request there cannot take the other three down with it.
-   Self-host it in production; see docs/SETUP.md.
+   They used to come through next/font/google, which downloads and parses CSS
+   from Google during the build. When Google answers with anything the parser
+   does not expect, it throws "Cannot read properties of null" and the build
+   fails — which is how a Vercel deployment died, after two local builds had
+   already failed the same way. A font should not be able to break a deploy.
+
+   Each face declares `font-display: swap`, so text is readable immediately
+   in the fallback and swaps when the face arrives.
    ========================================================================= */
-
-const geist = Geist({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-  variable: "--font-geist",
-  fallback: ["system-ui", "Segoe UI", "sans-serif"],
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  display: "swap",
-  variable: "--font-geist-mono",
-  fallback: ["ui-monospace", "SFMono-Regular", "monospace"],
-});
-
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  style: ["normal", "italic"],
-  display: "swap",
-  variable: "--font-source-serif",
-  fallback: ["Georgia", "serif"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -79,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`no-js ${geist.variable} ${geistMono.variable} ${sourceSerif.variable}`}
+      className="no-js"
     >
       <head>
         {/* Runs before first paint. The loader curtain is lifted by script,

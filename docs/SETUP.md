@@ -454,12 +454,6 @@ redirecting to it permanently.
 Carried forward from the handoff, and visible in the admin checks:
 
 - **Imagery.** No photography exists. Stock needs licensing and uploading.
-- **Self-hosting the other three faces.** Geist, Geist Mono and Source Serif 4
-  are fetched from Google Fonts at build time by `next/font` and served from
-  this origin, so nothing reaches a third party at runtime. The build itself
-  still depends on that fetch, which does occasionally fail; the cache under
-  `.next/cache` is what saves the next build, so avoid deleting `.next`
-  wholesale.
 - **The sixth case study**, a buildings-in-operation engagement. The slot is
   built and switched on.
 - **Two team profiles.** Sohani Withanage's details, and one unnamed third.
