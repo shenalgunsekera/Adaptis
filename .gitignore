@@ -15,3 +15,6 @@ tsconfig.tsbuildinfo
 .emulator/
 
 .vercel
+
+# Rendered email previews, written by the mail preview route
+.preview/

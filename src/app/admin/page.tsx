@@ -87,10 +87,6 @@ export default function Overview() {
     return reach.topPages.find((p) => p.path === path)?.views ?? 0;
   };
 
-  const all = rows?.flatMap((r) => r.findings) ?? [];
-  const errors = all.filter((f) => f.severity === "error").length;
-  const warnings = all.filter((f) => f.severity === "warning").length;
-  const notes = all.filter((f) => f.severity === "note").length;
 
   return (
     <AdminShell
@@ -119,18 +115,6 @@ export default function Overview() {
         <div className="adm__stat">
           <div className="adm__stat__v">{rows?.length ?? "—"}</div>
           <div className="adm__stat__l">Pages</div>
-        </div>
-        <div className={`adm__stat${errors ? " adm__hatch" : ""}`}>
-          <div className="adm__stat__v">{errors}</div>
-          <div className="adm__stat__l">Brand rules broken</div>
-        </div>
-        <div className="adm__stat">
-          <div className="adm__stat__v">{warnings}</div>
-          <div className="adm__stat__l">Worth a look</div>
-        </div>
-        <div className="adm__stat">
-          <div className="adm__stat__v">{notes}</div>
-          <div className="adm__stat__l">Outstanding before launch</div>
         </div>
         <div className="adm__stat">
           <div className="adm__stat__v">{unread ?? "—"}</div>

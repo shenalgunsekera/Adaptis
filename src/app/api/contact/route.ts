@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { tryDb } from "@/lib/firebase/admin";
 import { getSettings } from "@/lib/content";
 import { mailConfigured, sendEnquiryNotification } from "@/lib/mailer";
+import { listAdmins } from "@/lib/auth/admins";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -112,14 +113,34 @@ export async function POST(request: Request) {
   if (mailConfigured) {
     try {
       const settings = await getSettings();
+
+      /* Everyone who can sign in to the panel is told, because the people who
+         answer enquiries are the people with access. The configured notify
+         address is added on top for a shared mailbox that is not an editor
+         account; duplicates are collapsed in the mailer. A failure to read
+         the editor list must not cost us the notification, so it degrades to
+         the configured address alone. */
+      const editors = await listAdmins()
+        .then((list) => list.map((e) => e.email))
+        .catch((error) => {
+          console.error("[contact] could not read the editor list:", error);
+          return [] as string[];
+        });
+
+      const configured = process.env.CONTACT_NOTIFY_EMAIL ?? settings.contact.notifyEmail;
+
       await sendEnquiryNotification({
         name,
         organization,
         email,
         subject,
         message,
-        to: process.env.CONTACT_NOTIFY_EMAIL ?? settings.contact.notifyEmail,
+        to: [...editors, configured].filter(Boolean),
         submissionId: id,
+        receivedAt: record.createdAt,
+        inboxUrl: settings.seo?.siteUrl
+          ? new URL("/admin/inbox", settings.seo.siteUrl).toString()
+          : undefined,
       });
     } catch (error) {
       // The enquiry is saved; record why the notification did not arrive.
