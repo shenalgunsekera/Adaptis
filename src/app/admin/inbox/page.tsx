@@ -41,6 +41,22 @@ export default function Inbox() {
     await load();
   }
 
+  /** Says "I have this" to the other editors. The server settles two
+      simultaneous claims and tells the loser who got there first, so the
+      refusal is worth surfacing rather than swallowing. */
+  async function claim(id: string, release = false) {
+    setError(null);
+    try {
+      await api("/api/admin/submissions/claim", {
+        method: "POST",
+        body: JSON.stringify({ id, release }),
+      });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not claim that enquiry.");
+    }
+    await load();
+  }
+
   async function remove(id: string) {
     if (!window.confirm("Delete this enquiry permanently? This cannot be undone.")) return;
     await api(`/api/admin/submissions?id=${encodeURIComponent(id)}`, { method: "DELETE" });
@@ -110,6 +126,13 @@ export default function Inbox() {
                         Notification email failed
                       </div>
                     ) : null}
+                    {r.claimedBy ? (
+                      <div className="adm__marker" style={{ marginTop: 4 }}>
+                        {r.claimedBy === user?.id
+                          ? "You are handling this"
+                          : `${r.claimedByName || r.claimedByEmail} is handling this`}
+                      </div>
+                    ) : null}
                   </td>
                   <td>{r.organization || "—"}</td>
                   <td>{r.subject || "—"}</td>
@@ -120,6 +143,27 @@ export default function Inbox() {
                     })}
                   </td>
                   <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                    {!r.claimedBy ? (
+                      <>
+                        <button
+                          type="button"
+                          className="adm__btn adm__btn--sm"
+                          onClick={() => void claim(r.id)}
+                        >
+                          I&rsquo;ll take this
+                        </button>{" "}
+                      </>
+                    ) : r.claimedBy === user?.id ? (
+                      <>
+                        <button
+                          type="button"
+                          className="adm__btn adm__btn--quiet adm__btn--sm"
+                          onClick={() => void claim(r.id, true)}
+                        >
+                          Hand back
+                        </button>{" "}
+                      </>
+                    ) : null}
                     <a className="adm__btn adm__btn--sm" href={`mailto:${r.email}`}>
                       Reply
                     </a>{" "}

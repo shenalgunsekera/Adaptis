@@ -516,6 +516,21 @@ export interface ContactSubmission {
   /** Set when the notification email could not be sent. */
   mailError?: string;
   userAgent?: string;
+
+  /* --- Who is dealing with it ---------------------------------------------
+     An enquiry goes to every editor at once, so without this two of them
+     answer the same person within minutes of each other and neither knows.
+     Claiming is a statement to the others, not a permission: it locks nobody
+     out, and anyone can hand it back.
+     ---------------------------------------------------------------------- */
+
+  /** Editor id. Absent means nobody has picked it up. */
+  claimedBy?: string;
+  /** Their email, kept alongside the id so the inbox reads correctly even
+      after that editor has been removed. */
+  claimedByEmail?: string;
+  claimedByName?: string;
+  claimedAt?: string;
 }
 
 /* --- Engagement ------------------------------------------------------------

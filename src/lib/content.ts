@@ -169,6 +169,102 @@ export async function updateSubmission(
   await database.collection("contactSubmissions").doc(id).update(patch);
 }
 
+/* --- Claiming --------------------------------------------------------------
+   Two editors open the inbox, both see a new enquiry, both start replying.
+   The enquirer gets two answers and the firm looks disorganised, which is the
+   opposite of what an asset-performance advisor is selling.
+
+   Claiming runs in a transaction rather than as a read-then-write, because
+   the race it exists to prevent is precisely two claims arriving together: a
+   read-then-write would let both see "unclaimed" and both write. Whoever
+   commits second is told who holds it instead of silently taking it.
+   -------------------------------------------------------------------------- */
+
+export interface ClaimResult {
+  ok: boolean;
+  /** Present when the claim was refused, describing who holds it. */
+  heldBy?: { email: string; name?: string; at: string };
+  submission?: ContactSubmission;
+}
+
+export async function claimSubmission(
+  id: string,
+  editor: { uid: string; email: string; name?: string }
+): Promise<ClaimResult> {
+  const database = tryDb();
+  if (!database) throw new Error(credentialHelp());
+
+  const ref = database.collection("contactSubmissions").doc(id);
+
+  return database.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return { ok: false };
+
+    const current = snap.data() as ContactSubmission;
+
+    if (current.claimedBy && current.claimedBy !== editor.uid) {
+      return {
+        ok: false,
+        heldBy: {
+          email: current.claimedByEmail ?? "another editor",
+          name: current.claimedByName,
+          at: current.claimedAt ?? "",
+        },
+      };
+    }
+
+    const claim = {
+      claimedBy: editor.uid,
+      claimedByEmail: editor.email,
+      claimedByName: editor.name ?? "",
+      claimedAt: new Date().toISOString(),
+      // Picking it up is reading it.
+      read: true,
+    };
+
+    tx.set(ref, claim, { merge: true });
+    return { ok: true, submission: { ...current, ...claim, id } };
+  });
+}
+
+/** Hands it back. Only the holder may, so one editor cannot quietly take an
+    enquiry another is already mid-reply on. */
+export async function releaseSubmission(
+  id: string,
+  editorUid: string
+): Promise<ClaimResult> {
+  const database = tryDb();
+  if (!database) throw new Error(credentialHelp());
+
+  const ref = database.collection("contactSubmissions").doc(id);
+
+  return database.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return { ok: false };
+
+    const current = snap.data() as ContactSubmission;
+    if (current.claimedBy && current.claimedBy !== editorUid) {
+      return {
+        ok: false,
+        heldBy: {
+          email: current.claimedByEmail ?? "another editor",
+          name: current.claimedByName,
+          at: current.claimedAt ?? "",
+        },
+      };
+    }
+
+    const { FieldValue } = await import("firebase-admin/firestore");
+    tx.update(ref, {
+      claimedBy: FieldValue.delete(),
+      claimedByEmail: FieldValue.delete(),
+      claimedByName: FieldValue.delete(),
+      claimedAt: FieldValue.delete(),
+    });
+    return { ok: true, submission: { ...current, id } };
+  });
+}
+
 export async function deleteSubmission(id: string): Promise<void> {
   const database = tryDb();
   if (!database) throw new Error(credentialHelp());

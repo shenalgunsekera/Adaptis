@@ -201,6 +201,14 @@ export function renderEnquiry(enquiry: EnquiryMail): {
   };
 }
 
+/* Derived from the submission id rather than left to the mail server, so a
+   later message about the same enquiry can quote it in In-Reply-To and land
+   in the same thread. The domain half only has to be stable and plausible;
+   it is never resolved. */
+function messageIdFor(submissionId: string): string {
+  return `<enquiry-${submissionId}@adaptis.ca>`;
+}
+
 export async function sendEnquiryNotification(enquiry: EnquiryMail): Promise<void> {
   const { subject, text, html, recipients } = renderEnquiry(enquiry);
 
@@ -212,7 +220,105 @@ export async function sendEnquiryNotification(enquiry: EnquiryMail): Promise<voi
     bcc: recipients,
     // A reply goes to the enquirer, not back to the sending mailbox.
     replyTo: `"${enquiry.name}" <${enquiry.email}>`,
+    messageId: messageIdFor(enquiry.submissionId),
     subject,
+    text,
+    html,
+  });
+}
+
+export interface ClaimMail {
+  submissionId: string;
+  /** The enquirer, so the subject still says who this is about. */
+  enquirerName: string;
+  enquirerOrganization: string;
+  claimedByEmail: string;
+  claimedByName?: string;
+  claimedAt: string;
+  to: string[];
+  inboxUrl?: string;
+}
+
+/**
+ * Tells the other editors that someone has picked an enquiry up.
+ *
+ * Threaded onto the original notification with In-Reply-To and References, so
+ * it appears as a reply under the enquiry rather than as a second, unrelated
+ * message — which is the whole point: the answer to "is anyone on this?" has
+ * to be in the same place as the question.
+ *
+ * Reply-To is this mailbox, not the enquirer. A reply here is a word between
+ * colleagues, and must not be delivered to the person who made the enquiry.
+ */
+export async function sendClaimNotification(claim: ClaimMail): Promise<void> {
+  const recipients = [...new Set(claim.to.map((t) => t.trim().toLowerCase()).filter(Boolean))];
+  if (recipients.length === 0) return;
+
+  const who = claim.claimedByName?.trim() || claim.claimedByEmail;
+  const when = new Date(claim.claimedAt).toLocaleString("en-CA", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "America/Toronto",
+  });
+  const org = claim.enquirerOrganization ? `, ${claim.enquirerOrganization}` : "";
+
+  const text = [
+    `${who} is handling this enquiry.`,
+    "",
+    `Picked up ${when}.`,
+    "",
+    "No one else needs to reply. If you are already mid-answer, say so now.",
+    claim.inboxUrl ? `` : null,
+    claim.inboxUrl ? `Admin inbox: ${claim.inboxUrl}` : null,
+  ]
+    .filter((line): line is string => line !== null)
+    .join("\n");
+
+  const html = `<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:24px;background:${CARD};">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+           style="max-width:600px;margin:0 auto;border-collapse:collapse;
+                  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+                  color:${INK};">
+      <tr>
+        <td style="background:#FFFFFF;border:1px solid ${LINE};padding:22px 26px;">
+          <div style="width:28px;height:4px;background:${NAPLES};margin-bottom:14px;"></div>
+          <div style="font-size:16px;font-weight:600;letter-spacing:-0.01em;">
+            ${esc(who)} is handling this enquiry
+          </div>
+          <div style="color:${SECONDARY};font-size:13px;margin-top:6px;">
+            Picked up ${esc(when)}
+          </div>
+          <div style="border-top:1px solid ${LINE};margin-top:18px;padding-top:16px;
+                      font-size:14px;line-height:1.6;">
+            No one else needs to reply. If you are already mid-answer, say so now.
+          </div>
+          ${
+            claim.inboxUrl
+              ? `<div style="margin-top:14px;font-size:13px;">
+                   <a href="${esc(claim.inboxUrl)}" style="color:${INK};">Open the admin inbox</a>
+                 </div>`
+              : ""
+          }
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const parent = messageIdFor(claim.submissionId);
+
+  await transporter().sendMail({
+    from: `"Adaptis website" <${user}>`,
+    to: `"Adaptis" <${user}>`,
+    bcc: recipients,
+    // Back to this mailbox, never to the enquirer: this is an aside between
+    // colleagues that happens to live in the enquiry's thread.
+    replyTo: `"Adaptis" <${user}>`,
+    inReplyTo: parent,
+    references: [parent],
+    subject: `Re: Website enquiry — ${claim.enquirerName}${org}`,
     text,
     html,
   });
