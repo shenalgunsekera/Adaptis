@@ -33,6 +33,15 @@ function transporter(): nodemailer.Transporter {
     port,
     secure: port === 465,
     auth: { user: user!, pass: pass! },
+    /* Nodemailer waits indefinitely by default. A request that sends mail
+       before it answers — claiming an enquiry does — would then hang for as
+       long as the mail server stayed silent, and on a serverless host that
+       means until the platform kills the function. Ten seconds is generous
+       for SMTP and short enough that a stuck server costs a notification
+       rather than the operation the notification was about. */
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 20_000,
   });
   return cached;
 }
@@ -58,6 +67,8 @@ export interface EnquiryMail {
   receivedAt?: string;
   /** Absolute address of the admin inbox, when the site address is known. */
   inboxUrl?: string;
+  /** Absolute address that claims this enquiry on arrival. */
+  claimUrl?: string;
 }
 
 /* Brand values, inlined because an email has no stylesheet and no webfonts.
@@ -112,6 +123,10 @@ export function renderEnquiry(enquiry: EnquiryMail): {
     enquiry.message,
     "",
     `Reply directly to this email and it goes to ${enquiry.name} at ${enquiry.email}.`,
+    enquiry.claimUrl ? "" : null,
+    enquiry.claimUrl
+      ? `Taking it on? Open this to tell the other editors: ${enquiry.claimUrl}`
+      : null,
     enquiry.inboxUrl ? `Admin inbox: ${enquiry.inboxUrl}` : null,
     `Reference: ${enquiry.submissionId}`,
   ]
@@ -167,6 +182,27 @@ export function renderEnquiry(enquiry: EnquiryMail): {
                       )}</div>
         </td>
       </tr>
+
+      ${
+        enquiry.claimUrl
+          ? `<tr>
+        <td style="background:#FFFFFF;padding:0 28px 22px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
+          <div style="border-top:1px solid ${LINE};padding-top:20px;">
+            <!-- A link styled as a button: every mail client renders an
+                 anchor, and a good number strip <button> outright. -->
+            <a href="${esc(enquiry.claimUrl)}"
+               style="display:inline-block;background:${INK};color:#FFFFFF;text-decoration:none;
+                      font-size:14px;font-weight:500;padding:12px 20px;border-radius:8px;">
+              I&rsquo;ll take this one
+            </a>
+            <div style="color:${SECONDARY};font-size:12px;margin-top:10px;line-height:1.5;">
+              Tells the other editors you are on it, so nobody answers twice.
+            </div>
+          </div>
+        </td>
+      </tr>`
+          : ""
+      }
 
       <tr>
         <td style="background:#FFFFFF;padding:0 28px 26px;border-left:1px solid ${LINE};

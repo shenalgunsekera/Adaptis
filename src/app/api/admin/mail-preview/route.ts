@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/apiAuth";
 import { listAdmins } from "@/lib/auth/admins";
 import { getSettings } from "@/lib/content";
 import { mailConfigured, renderEnquiry } from "@/lib/mailer";
+import { absoluteUrl } from "@/lib/siteUrl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,9 +44,8 @@ export async function GET(request: Request) {
     to: [...editors, settings.contact.notifyEmail].filter(Boolean),
     submissionId: "preview-not-a-real-enquiry",
     receivedAt: new Date().toISOString(),
-    inboxUrl: settings.seo?.siteUrl
-      ? new URL("/admin/inbox", settings.seo.siteUrl).toString()
-      : undefined,
+    inboxUrl: absoluteUrl("/admin/inbox", settings.seo?.siteUrl),
+    claimUrl: absoluteUrl("/admin/inbox?claim=preview-not-a-real-enquiry", settings.seo?.siteUrl),
   });
 
   const format = new URL(request.url).searchParams.get("format");

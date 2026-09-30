@@ -4,6 +4,7 @@ import { tryDb } from "@/lib/firebase/admin";
 import { getSettings } from "@/lib/content";
 import { mailConfigured, sendEnquiryNotification } from "@/lib/mailer";
 import { listAdmins } from "@/lib/auth/admins";
+import { absoluteUrl } from "@/lib/siteUrl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -138,9 +139,11 @@ export async function POST(request: Request) {
         to: [...editors, configured].filter(Boolean),
         submissionId: id,
         receivedAt: record.createdAt,
-        inboxUrl: settings.seo?.siteUrl
-          ? new URL("/admin/inbox", settings.seo.siteUrl).toString()
-          : undefined,
+        inboxUrl: absoluteUrl("/admin/inbox", settings.seo?.siteUrl),
+        claimUrl: absoluteUrl(
+          `/admin/inbox?claim=${encodeURIComponent(id)}`,
+          settings.seo?.siteUrl
+        ),
       });
     } catch (error) {
       // The enquiry is saved; record why the notification did not arrive.
